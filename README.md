@@ -1,1 +1,3 @@
-# pyhmc
+# PyHMC
+
+Work in progress. Details forthcoming.
