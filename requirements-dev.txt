@@ -1,0 +1,8 @@
+black
+mock
+mypy
+pydocstyle
+pylint
+pytest
+pytest-cov
+pytest-html
