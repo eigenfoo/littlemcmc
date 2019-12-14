@@ -25,7 +25,6 @@ class DualAverageAdaptation(object):
             Parameter for dual averaging. Higher values slow initial
             adaptation.
         """
-
         self._log_step = np.log(initial_step)
         self._log_bar = self._log_step
         self._target = target
