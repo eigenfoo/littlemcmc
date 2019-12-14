@@ -1,9 +1,10 @@
+"""Base class for Hamiltonian Monte Carlo."""
+
 from collections import namedtuple
 import numpy as np
 
-from . import integration
+from . import integration, step_sizes
 from .quadpotential import quad_potential, QuadPotentialDiagAdapt
-from . import step_sizes
 from .report import SamplerWarning, WarningType
 
 HMCStepData = namedtuple("HMCStepData", "end, accept_stat, divergence_info, stats")
@@ -36,6 +37,7 @@ def metropolis_select(log_accept_rate, q, q0):
 
 class BaseHMC:
     """Superclass to implement Hamiltonian Monte Carlo."""
+
     def __init__(
         self,
         vars=None,
@@ -121,18 +123,27 @@ class BaseHMC:
         self._num_divs_sample = 0
 
     def step(self, array):
-        """Take one step."""
+        """Perform a single HMC iteration.
+
+        Generates sampler statistics if the sampler supports it.
+
+        Parameters
+        ----------
+        array : array-like
+            TODO: document this!
+        """
         # FIXME where does generates_stats come from?
         if self.generates_stats:
-            apoint, stats = self.astep(array)
+            apoint, stats = self._astep(array)
             # point = self._logp_dlogp_func.array_to_full_dict(apoint)
             return apoint, stats
         else:
-            apoint = self.astep(array)
+            apoint = self._astep(array)
             # point = self._logp_dlogp_func.array_to_full_dict(apoint)
             return apoint
 
     def stop_tuning(self):
+        """Stop tuning."""
         if hasattr(self, "tune"):
             self.tune = False
 
@@ -140,11 +151,24 @@ class BaseHMC:
         """Compute one Hamiltonian trajectory and return the next state.
 
         Subclasses must overwrite this method and return a `HMCStepData`.
+
+        Parameters
+        ----------
+        start
+        p0
+        step_size
+            TODO: document these!
         """
         raise NotImplementedError("Abstract method")
 
-    def astep(self, q0):
-        """Perform a single HMC iteration."""
+    def _astep(self, q0):
+        """Perform a single HMC iteration.
+
+        Parameters
+        ----------
+        q0
+            TODO: document these!
+        """
         p0 = self.potential.random()
         start = self.integrator.compute_state(q0, p0)
 
@@ -197,12 +221,6 @@ class BaseHMC:
         stats.update(self.step_adapt.stats())
 
         return hmc_step.end.q, [stats]
-
-    def reset(self, start=None):
-        """Reset quadpotential and prepare to tune again."""
-        # FIXME do we really need this function?
-        self.tune = True
-        self.potential.reset()
 
     def warnings(self):
         """Generate warnings from HMC sampler."""

@@ -11,7 +11,7 @@ README_FILE = PROJECT_ROOT / "README.md"
 VERSION_FILE = PROJECT_ROOT / "littlemcmc" / "__init__.py"
 
 NAME = "littlemcmc"
-DESCRIPTION = "A Python probabilistic programming interface to TensorFlow, for Bayesian modelling and machine learning."
+DESCRIPTION = "A lightweight and performant implementation of HMC and NUTS in Python, spun out of the PyMC4 project."
 AUTHOR = "George Ho"
 AUTHOR_EMAIL = "mail@eigenfoo.xyz"
 URL = ("https://github.com/eigenfoo/littlemcmc",)
