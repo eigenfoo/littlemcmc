@@ -12,28 +12,28 @@ help:
 
 conda:  # Set up a conda environment for development.
 	@printf "Creating conda environment...\n"
-	${CONDA} create --yes --name littlemcmc-env python=3.6
+	${CONDA} create --yes --name env-littlemcmc python=3.6
 	( \
-	${CONDA} activate littlemcmc-env; \
+	${CONDA} activate env-littlemcmc; \
 	${PIP} install -U pip; \
 	${PIP} install -r requirements.txt; \
 	${PIP} install -r requirements-dev.txt; \
 	${CONDA} deactivate; \
 	)
-	@printf "\n\nConda environment created! \033[1;34mRun \`conda activate littlemcmc-env\` to activate it.\033[0m\n\n\n"
+	@printf "\n\nConda environment created! \033[1;34mRun \`conda activate env-littlemcmc\` to activate it.\033[0m\n\n\n"
 
 venv:  # Set up a Python virtual environment for development.
 	@printf "Creating Python virtual environment...\n"
-	rm -rf littlemcmc-venv
-	${PYTHON} -m venv littlemcmc-venv
+	rm -rf venv-littlemcmc/
+	${PYTHON} -m venv venv-littlemcmc/
 	( \
-	source littlemcmc-venv/bin/activate; \
+	source venv-littlemcmc/bin/activate; \
 	${PIP} install -U pip; \
 	${PIP} install -r requirements.txt; \
 	${PIP} install -r requirements-dev.txt; \
 	deactivate; \
 	)
-	@printf "\n\nVirtual environment created! \033[1;34mRun \`source littlemcmc-venv/bin/activate\` to activate it.\033[0m\n\n\n"
+	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv-littlemcmc/bin/activate\` to activate it.\033[0m\n\n\n"
 
 docstyle:
 	@printf "Checking documentation with pydocstyle...\n"
