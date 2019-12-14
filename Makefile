@@ -12,55 +12,61 @@ help:
 
 conda:  # Set up a conda environment for development.
 	@printf "Creating conda environment...\n"
-	${CONDA} create --yes --name pyhmc-env python=3.6
+	${CONDA} create --yes --name littlemcmc-env python=3.6
 	( \
-	${CONDA} activate pyhmc-env; \
+	${CONDA} activate littlemcmc-env; \
 	${PIP} install -U pip; \
 	${PIP} install -r requirements.txt; \
 	${PIP} install -r requirements-dev.txt; \
 	${CONDA} deactivate; \
 	)
-	@printf "\n\nConda environment created! \033[1;34mRun \`conda activate pyhmc-env\` to activate it.\033[0m\n\n\n"
+	@printf "\n\nConda environment created! \033[1;34mRun \`conda activate littlemcmc-env\` to activate it.\033[0m\n\n\n"
 
 venv:  # Set up a Python virtual environment for development.
 	@printf "Creating Python virtual environment...\n"
-	rm -rf pyhmc-venv
-	${PYTHON} -m venv pyhmc-venv
+	rm -rf littlemcmc-venv
+	${PYTHON} -m venv littlemcmc-venv
 	( \
-	source pyhmc-venv/bin/activate; \
+	source littlemcmc-venv/bin/activate; \
 	${PIP} install -U pip; \
 	${PIP} install -r requirements.txt; \
 	${PIP} install -r requirements-dev.txt; \
 	deactivate; \
 	)
-	@printf "\n\nVirtual environment created! \033[1;34mRun \`source pyhmc-venv/bin/activate\` to activate it.\033[0m\n\n\n"
+	@printf "\n\nVirtual environment created! \033[1;34mRun \`source littlemcmc-venv/bin/activate\` to activate it.\033[0m\n\n\n"
 
 docstyle:
 	@printf "Checking documentation with pydocstyle...\n"
-	pydocstyle pyhmc/
+	pydocstyle littlemcmc/
 	@printf "\033[1;34mPydocstyle passes!\033[0m\n\n"
 
 format:
 	@printf "Checking code style with black...\n"
-	black --check --diff pyhmc tests
+	black --check --diff littlemcmc/ tests/
 	@printf "\033[1;34mBlack passes!\033[0m\n\n"
 
 style:
 	@printf "Checking code style with pylint...\n"
-	pylint pyhmc/
+	pylint littlemcmc/
 	@printf "\033[1;34mPylint passes!\033[0m\n\n"
 
 types:
 	@printf "Checking code type signatures with mypy...\n"
-	python -m mypy --ignore-missing-imports pyhmc/
+	python -m mypy --ignore-missing-imports littlemcmc/
 	@printf "\033[1;34mMypy passes!\033[0m\n\n"
 
 black:  # Format code in-place using black.
-	black pyhmc/ tests/
+	black littlemcmc/ tests/
 
 test:  # Test code using pytest.
-	pytest -v pyhmc tests --doctest-modules --html=testing-report.html --self-contained-html
+	pytest -v littlemcmc tests --doctest-modules --html=testing-report.html --self-contained-html
 
 lint: docstyle format style types  # Lint code using pydocstyle, black, pylint and mypy.
 
 check: lint test  # Both lint and test code. Runs `make lint` followed by `make test`.
+
+clean:  # Clean project directories.
+	rm -rf dist/ site/ __pycache__/ testing-report.html
+	find littlemcmc/ -type d -name "__pycache__" -exec rm -rf {} +
+	find littlemcmc/ -type d -name "__pycache__" -delete
+	find littlemcmc/ -type f -name "*.pyc" -delete
