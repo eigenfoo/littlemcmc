@@ -1,3 +1,5 @@
+"""Leapfrog integrators."""
+
 from collections import namedtuple
 from scipy import linalg
 
@@ -6,17 +8,35 @@ State = namedtuple("State", "q, p, v, q_grad, energy, model_logp")
 
 
 class IntegrationError(RuntimeError):
+    """Numerical errors during leapfrog integration."""
+
     pass
 
 
 class CpuLeapfrogIntegrator(object):
+    """Leapfrog integrator using the CPU."""
+
     def __init__(self, potential, logp_dlogp_func):
-        """Leapfrog integrator using CPU."""
+        """Instantiate a CPU leapfrog integrator.
+
+        Parameters
+        ----------
+        potential
+        logp_dlogp_func
+        """
         self._potential = potential
         self._logp_dlogp_func = logp_dlogp_func
 
     def compute_state(self, q, p):
-        """Compute Hamiltonian functions using a position and momentum."""
+        """Compute Hamiltonian functions using a position and momentum.
+
+        Parameters
+        ----------
+        q
+            Position.
+        p
+            Momentum
+        """
         logp, dlogp = self._logp_dlogp_func(q)
         v = self._potential.velocity(p)
         kinetic = self._potential.energy(p, velocity=v)
@@ -56,19 +76,20 @@ class CpuLeapfrogIntegrator(object):
                 raise
 
     def _step(self, epsilon, state):
+        """Perform one leapfrog step."""
         pot = self._potential
         q, p, v, q_grad, energy, logp = state
 
         dt = 0.5 * epsilon
 
-        # half momentum step
+        # Half momentum step
         p_new = p + dt * q_grad
 
-        # whole position step
+        # Whole position step
         v_new = pot.velocity(p_new)
         q_new = (q + epsilon * v_new).astype(q.dtype)
 
-        # half momentum step
+        # Half momentum step
         logp, q_new_grad = self._logp_dlogp_func(q_new)
         p_new = p_new + dt * q_new_grad
 

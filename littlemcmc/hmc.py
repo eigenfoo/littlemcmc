@@ -1,3 +1,5 @@
+"""Hamiltonian Monte Carlo sampler."""
+
 import numpy as np
 
 from .integration import IntegrationError

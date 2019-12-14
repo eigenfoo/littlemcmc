@@ -1,3 +1,5 @@
+"""Quadpotentials a.k.a. mass matrices or metrics."""
+
 import numpy as np
 from numpy.random import normal
 from scipy.sparse import issparse
@@ -71,17 +73,22 @@ class PositiveDefiniteError(ValueError):
 
 
 class QuadPotential(object):
+    """Base class for quadpotentials."""
+
     def velocity(self, x, out=None):
         """Compute the current velocity at a position in parameter space."""
         raise NotImplementedError("Abstract method")
 
     def energy(self, x, velocity=None):
+        """Compute kinetic energy at a position in parameter space."""
         raise NotImplementedError("Abstract method")
 
     def random(self, x):
+        """Draw random value from QuadPotential."""
         raise NotImplementedError("Abstract method")
 
     def velocity_energy(self, x, v_out):
+        """Compute velocity and return kinetic energy at a position in parameter space."""
         raise NotImplementedError("Abstract method")
 
     def update(self, sample, grad, tune):
@@ -529,6 +536,8 @@ class Covariance:
 
 
 class QuadPotentialLowRank(object):
+    """Quad potential using a low-rank covariance matrix."""
+
     def __init__(self, ndim, n_approx, diag):
         self._cov = None
         self._iter = 0
@@ -542,6 +551,7 @@ class QuadPotentialLowRank(object):
         self.dtype = "float64"
 
     def velocity(self, x, out=None):
+        """Compute the current velocity at a position in parameter space."""
         if self._cov is None:
             if out is None:
                 out = np.empty_like(x)
@@ -551,24 +561,29 @@ class QuadPotentialLowRank(object):
         return self._cov.matmul(x, out=out)
 
     def energy(self, x, velocity=None):
+        """Compute kinetic energy at a position in parameter space."""
         if velocity is None:
             velocity = self.velocity(x)
         return 0.5 * x.dot(velocity)
 
     def random(self):
+        """Draw random value from QuadPotential."""
         rand = np.random.randn(self._ndim)
         if self._cov is None:
             return rand
         return self._cov.invsqrtmul(rand)
 
     def velocity_energy(self, x, v_out):
+        """Compute velocity and return kinetic energy at a position in parameter space."""
         self.velocity(x, out=v_out)
         return 0.5 * np.dot(x, v_out)
 
     def raise_ok(self, *args, **kwargs):
+        """Check if the mass matrix is ok, and raise ValueError if not."""
         pass
 
     def update(self, sample, grad, tune):
+        """Inform the potential about a new sample during tuning."""
         self._iter += 1
         if not tune:
             return

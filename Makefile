@@ -66,7 +66,7 @@ lint: docstyle format style types  # Lint code using pydocstyle, black, pylint a
 check: lint test  # Both lint and test code. Runs `make lint` followed by `make test`.
 
 clean:  # Clean project directories.
-	rm -rf dist/ site/ __pycache__/ testing-report.html
+	rm -rf dist/ site/ littlemcmc.egg-info/ pip-wheel-metadata/ __pycache__/ testing-report.html
 	find littlemcmc/ -type d -name "__pycache__" -exec rm -rf {} +
 	find littlemcmc/ -type d -name "__pycache__" -delete
 	find littlemcmc/ -type f -name "*.pyc" -delete
