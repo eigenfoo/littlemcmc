@@ -18,7 +18,6 @@ class HamiltonianMC(BaseHMC):
     """
 
     name = "hmc"
-    default_blocked = True
     generates_stats = True
     stats_dtypes = [
         {
@@ -52,6 +51,7 @@ class HamiltonianMC(BaseHMC):
         Parameters
         ----------
         vars : list of theano variables
+            FIXME: this can't be correct, right?
         path_length : float, default=2
             total length to travel
         step_rand : function float -> float, default=unif
@@ -88,8 +88,6 @@ class HamiltonianMC(BaseHMC):
         adapt_step_size : bool, default=True
             Whether step size adaptation should be enabled. If this is
             disabled, `k`, `t0`, `gamma` and `target_accept` are ignored.
-        model : pymc3.Model
-            The model
         **kwargs : passed to BaseHMC
         """
         super(HamiltonianMC, self).__init__(**kwargs)

@@ -1,7 +1,4 @@
 from collections import namedtuple
-
-# import tensorflow as tf
-
 import numpy as np
 
 from . import integration
@@ -10,40 +7,35 @@ from . import step_sizes
 from .report import SamplerWarning, WarningType
 
 HMCStepData = namedtuple("HMCStepData", "end, accept_stat, divergence_info, stats")
-
-
 DivergenceInfo = namedtuple("DivergenceInfo", "message, exec_info, state")
 
 
-def metrop_select(mr, q, q0):
+def metropolis_select(log_accept_rate, q, q0):
     """Perform rejection/acceptance step for Metropolis class samplers.
 
     Returns the new sample q if a uniform random number is less than the
-    metropolis acceptance rate (`mr`), and the old sample otherwise, along
+    Metropolis acceptance rate (`mr`), and the old sample otherwise, along
     with a boolean indicating whether the sample was accepted.
 
     Parameters
     ----------
-    mr : float, Metropolis acceptance rate
-    q : proposed sample
-    q0 : current sample
+    log_accept_rate : float
+        Log of Metropolis acceptance rate
+    q : Proposed sample
+    q0 : Current sample
 
     Returns
     -------
-    q or q0
+    q or q0, boolean
     """
-    # Compare acceptance ratio to uniform random number
-    if np.isfinite(mr) and np.log(uniform()) < mr:
+    if np.isfinite(log_accept_rate) and np.log(np.random.uniform()) < log_accept_rate:
         return q, True
     else:
         return q0, False
 
 
 class BaseHMC:
-    """Superclass to implement Hamiltonian/hybrid monte carlo."""
-
-    default_blocked = True
-
+    """Superclass to implement Hamiltonian Monte Carlo."""
     def __init__(
         self,
         vars=None,
@@ -67,54 +59,61 @@ class BaseHMC:
 
         Parameters
         ----------
-        vars : list of theano variables
-        scaling : array_like, ndim = {1,2}
-            Scaling for momentum distribution. 1d arrays interpreted matrix
-            diagonal.
+        vars : list of Theano variables
+            FIXME: this can't be correct, right?
+        scaling : 1 or 2-dimensional array-like
+            Scaling for momentum distribution. 1 dimensional arrays are
+            interpreted as a matrix diagonal.
         step_scale : float, default=0.25
-            Size of steps to take, automatically scaled down by 1/n**(1/4)
+            Size of steps to take, automatically scaled down by 1 / (size ** 0.25)
         is_cov : bool, default=False
             Treat scaling as a covariance matrix/vector if True, else treat
             it as a precision matrix/vector
-        model : pymc3 Model instance
-        blocked: bool, default=True
-        potential : Potential, optional
+        logp_dlog_func : Python callable
+            TODO: document this!
+        size : tuple
+            TODO: document this!
+        potential: littlemcmc.quadpotential.Potential, optional
             An object that represents the Hamiltonian with methods `velocity`,
             `energy`, and `random` methods.
+        integrator
+        dtype
+        Emax
+        target_accept
+        gamma
+        k
+        t0
+        adapt_step_size
+        step_rand : Python callable
+            Called on step size to randomize, immediate before adapting step
+            size.
         """
         self._logp_dlogp_func = logp_dlogp_func
         self.adapt_step_size = adapt_step_size
         self.Emax = Emax
         self.iter_count = 0
         self.size = size
-        # size = self._logp_dlogp_func.size
-
         self.step_size = step_scale / (size ** 0.25)
         self.target_accept = target_accept
+        # FIXME: find a better name that step_adapt
         self.step_adapt = step_sizes.DualAverageAdaptation(
             self.step_size, target_accept, gamma, k, t0
         )
-
+        self.integrator = integration.CpuLeapfrogIntegrator(self.potential, self._logp_dlogp_func)
         self.tune = True
 
         if scaling is None and potential is None:
+            # Default to diagonal quadpotential
             mean = np.zeros(size)
             var = np.ones(size)
             potential = QuadPotentialDiagAdapt(size, mean, var, 10)
 
-        # if isinstance(scaling, dict):
-        #    point = Point(scaling, model=model)
-        #    scaling = guess_scaling(point, model=model, vars=vars)
-
         if scaling is not None and potential is not None:
-            raise ValueError("Can not specify both potential and scaling.")
-
-        if potential is not None:
+            raise ValueError("Cannot specify both `potential` and `scaling`.")
+        elif potential is not None:
             self.potential = potential
         else:
             self.potential = quad_potential(scaling, is_cov)
-
-        self.integrator = integration.CpuLeapfrogIntegrator(self.potential, self._logp_dlogp_func)
 
         self._step_rand = step_rand
         self._warnings = []
@@ -122,6 +121,8 @@ class BaseHMC:
         self._num_divs_sample = 0
 
     def step(self, array):
+        """Take one step."""
+        # FIXME where does generates_stats come from?
         if self.generates_stats:
             apoint, stats = self.astep(array)
             # point = self._logp_dlogp_func.array_to_full_dict(apoint)
@@ -136,7 +137,7 @@ class BaseHMC:
             self.tune = False
 
     def _hamiltonian_step(self, start, p0, step_size):
-        """Compute one hamiltonian trajectory and return the next state.
+        """Compute one Hamiltonian trajectory and return the next state.
 
         Subclasses must overwrite this method and return a `HMCStepData`.
         """
@@ -150,20 +151,23 @@ class BaseHMC:
         if not np.isfinite(start.energy):
             # self.potential.raise_ok(self._logp_dlogp_func._ordering.vmap)
             raise ValueError(
-                "Bad initial energy: %s. The model " "might be misspecified." % start.energy
+                "Bad initial energy: {}. The model might be misspecified.".format(start.energy)
             )
 
+        # Adapt step size
         adapt_step = self.tune and self.adapt_step_size
         step_size = self.step_adapt.current(adapt_step)
         self.step_size = step_size
-
         if self._step_rand is not None:
             step_size = self._step_rand(step_size)
 
+        # Take the Hamiltonian step
         hmc_step = self._hamiltonian_step(start, p0, step_size)
 
+        # Update step size and quadpotential
         self.step_adapt.update(hmc_step.accept_stat, adapt_step)
         self.potential.update(hmc_step.end.q, hmc_step.end.q_grad, self.tune)
+
         if hmc_step.divergence_info:
             info = hmc_step.divergence_info
             if self.tune:
@@ -195,19 +199,22 @@ class BaseHMC:
         return hmc_step.end.q, [stats]
 
     def reset(self, start=None):
+        """Reset quadpotential and prepare to tune again."""
+        # FIXME do we really need this function?
         self.tune = True
         self.potential.reset()
 
     def warnings(self):
-        # list.copy() is not available in python2
-        warnings = self._warnings[:]
+        """Generate warnings from HMC sampler."""
+        # list.copy() is only available in Python 3
+        warnings = self._warnings.copy()
 
         # Generate a global warning for divergences
         message = ""
         n_divs = self._num_divs_sample
         if n_divs and self._samples_after_tune == n_divs:
             message = (
-                "The chain contains only diverging samples. The model " "is probably misspecified."
+                "The chain contains only diverging samples. The model is probably misspecified."
             )
         elif n_divs == 1:
             message = (
