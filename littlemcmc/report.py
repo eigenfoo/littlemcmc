@@ -1,3 +1,5 @@
+"""Sampler warnings."""
+
 from collections import namedtuple
 import enum
 
@@ -6,6 +8,7 @@ SamplerWarning = namedtuple("SamplerWarning", "kind, message, level, step, exec_
 
 @enum.unique
 class WarningType(enum.Enum):
+    """Enumeration of sampler warnings."""
     # For HMC and NUTS
     DIVERGENCE = 1
     TUNING_DIVERGENCE = 2
