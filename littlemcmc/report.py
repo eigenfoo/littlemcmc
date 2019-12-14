@@ -3,7 +3,9 @@
 from collections import namedtuple
 import enum
 
-SamplerWarning = namedtuple("SamplerWarning", "kind, message, level, step, exec_info, extra")
+SamplerWarning = namedtuple(
+    "SamplerWarning", "kind, message, level, step, exec_info, extra"
+)
 
 
 @enum.unique

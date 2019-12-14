@@ -199,7 +199,9 @@ class NUTS(BaseHMC):
 Proposal = namedtuple("Proposal", "q, q_grad, energy, p_accept, logp")
 
 # A subtree of the binary tree built by nuts.
-Subtree = namedtuple("Subtree", "left, right, p_sum, proposal, log_size, accept_sum, n_proposals")
+Subtree = namedtuple(
+    "Subtree", "left, right, p_sum, proposal, log_size, accept_sum, n_proposals"
+)
 
 
 class _Tree(object):
@@ -226,7 +228,9 @@ class _Tree(object):
         self.start_energy = np.array(start.energy)
 
         self.left = self.right = start
-        self.proposal = Proposal(start.q, start.q_grad, start.energy, 1.0, start.model_logp)
+        self.proposal = Proposal(
+            start.q, start.q_grad, start.energy, 1.0, start.model_logp
+        )
         self.depth = 0
         self.log_size = 0
         self.accept_sum = 0
@@ -294,11 +298,15 @@ class _Tree(object):
             if np.abs(energy_change) < self.Emax:
                 p_accept = min(1, np.exp(-energy_change))
                 log_size = -energy_change
-                proposal = Proposal(right.q, right.q_grad, right.energy, p_accept, right.model_logp)
+                proposal = Proposal(
+                    right.q, right.q_grad, right.energy, p_accept, right.model_logp
+                )
                 tree = Subtree(right, right, right.p, proposal, log_size, p_accept, 1)
                 return tree, None, False
             else:
-                error_msg = "Energy change in leapfrog step is too large: %s." % energy_change
+                error_msg = (
+                    "Energy change in leapfrog step is too large: %s." % energy_change
+                )
                 error = None
         tree = Subtree(None, None, None, None, -np.inf, 0, 1)
         divergance_info = DivergenceInfo(error_msg, error, left)

@@ -75,7 +75,10 @@ class DualAverageAdaptation(object):
 
     def stats(self):
         """Get step size adaptation statistics."""
-        return {"step_size": np.exp(self._log_step), "step_size_bar": np.exp(self._log_bar)}
+        return {
+            "step_size": np.exp(self._log_step),
+            "step_size_bar": np.exp(self._log_bar),
+        }
 
     def warnings(self):
         """Generate warnings from dual averaging step size adaptation."""
@@ -94,7 +97,9 @@ class DualAverageAdaptation(object):
                 "number of tuning steps." % (mean_accept, target_accept)
             )
             info = {"target": target_accept, "actual": mean_accept}
-            warning = SamplerWarning(WarningType.BAD_ACCEPTANCE, msg, "warn", None, None, info)
+            warning = SamplerWarning(
+                WarningType.BAD_ACCEPTANCE, msg, "warn", None, None, info
+            )
             return [warning]
         else:
             return []

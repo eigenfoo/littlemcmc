@@ -47,7 +47,9 @@ def quad_potential(C, is_cov):
         else:
             return QuadPotentialDiag(1.0 / C)
     else:
-        raise NotImplementedError("QuadPotentialFull and QuadPotentialFullInv not yet implemented")
+        raise NotImplementedError(
+            "QuadPotentialFull and QuadPotentialFullInv not yet implemented"
+        )
 
 
 def partial_check_positive_definite(C):
@@ -59,7 +61,9 @@ def partial_check_positive_definite(C):
     (i,) = np.nonzero(np.logical_or(np.isnan(d), d <= 0))
 
     if len(i):
-        raise PositiveDefiniteError("Simple check failed. Diagonal contains negatives", i)
+        raise PositiveDefiniteError(
+            "Simple check failed. Diagonal contains negatives", i
+        )
 
 
 class PositiveDefiniteError(ValueError):
@@ -69,7 +73,10 @@ class PositiveDefiniteError(ValueError):
         self.msg = msg
 
     def __str__(self):
-        return "Scaling is not positive definite: %s. Check indexes %s." % (self.msg, self.idx)
+        return "Scaling is not positive definite: %s. Check indexes %s." % (
+            self.msg,
+            self.idx,
+        )
 
 
 class QuadPotential(object):
@@ -145,11 +152,13 @@ class QuadPotentialDiagAdapt(QuadPotential):
             raise ValueError("Initial mean must be one-dimensional.")
         if initial_diag is not None and len(initial_diag) != n:
             raise ValueError(
-                "Wrong shape for initial_diag: expected %s got %s" % (n, len(initial_diag))
+                "Wrong shape for initial_diag: expected %s got %s"
+                % (n, len(initial_diag))
             )
         if len(initial_mean) != n:
             raise ValueError(
-                "Wrong shape for initial_mean: expected %s got %s" % (n, len(initial_mean))
+                "Wrong shape for initial_mean: expected %s got %s"
+                % (n, len(initial_mean))
             )
 
         if dtype is None:
@@ -244,7 +253,8 @@ class QuadPotentialDiagAdapt(QuadPotential):
             errmsg = ["Mass matrix contains zeros on the diagonal. "]
             for ii in index:
                 errmsg.append(
-                    "The derivative of RV `{}`.ravel()[{}]" " is zero.".format(*name_slc[ii])
+                    "The derivative of RV `{}`.ravel()[{}]"
+                    " is zero.".format(*name_slc[ii])
                 )
             raise ValueError("\n".join(errmsg))
 
@@ -259,7 +269,8 @@ class QuadPotentialDiagAdapt(QuadPotential):
             errmsg = ["Mass matrix contains non-finite values on the diagonal. "]
             for ii in index:
                 errmsg.append(
-                    "The derivative of RV `{}`.ravel()[{}]" " is non-finite.".format(*name_slc[ii])
+                    "The derivative of RV `{}`.ravel()[{}]"
+                    " is non-finite.".format(*name_slc[ii])
                 )
             raise ValueError("\n".join(errmsg))
 
@@ -309,7 +320,12 @@ class _WeightedVariance(object):
     """Online algorithm for computing mean of variance."""
 
     def __init__(
-        self, nelem, initial_mean=None, initial_variance=None, initial_weight=0, dtype="d"
+        self,
+        nelem,
+        initial_mean=None,
+        initial_variance=None,
+        initial_weight=0,
+        dtype="d",
     ):
         self._dtype = dtype
         self.w_sum = float(initial_weight)
@@ -609,4 +625,6 @@ class QuadPotentialLowRank(object):
         if self._cov is not None:
             self._old_covs.append(self._cov)
         n_svd = min(self._ndim - 5, n_samples - 5)
-        self._cov = Covariance(self._ndim, n_svd, n_approx, samples, grads, diag=self._diag)
+        self._cov = Covariance(
+            self._ndim, n_svd, n_approx, samples, grads, diag=self._diag
+        )

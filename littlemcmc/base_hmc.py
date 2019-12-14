@@ -101,7 +101,9 @@ class BaseHMC:
         self.step_adapt = step_sizes.DualAverageAdaptation(
             self.step_size, target_accept, gamma, k, t0
         )
-        self.integrator = integration.CpuLeapfrogIntegrator(self.potential, self._logp_dlogp_func)
+        self.integrator = integration.CpuLeapfrogIntegrator(
+            self.potential, self._logp_dlogp_func
+        )
         self.tune = True
 
         if scaling is None and potential is None:
@@ -175,7 +177,9 @@ class BaseHMC:
         if not np.isfinite(start.energy):
             # self.potential.raise_ok(self._logp_dlogp_func._ordering.vmap)
             raise ValueError(
-                "Bad initial energy: {}. The model might be misspecified.".format(start.energy)
+                "Bad initial energy: {}. The model might be misspecified.".format(
+                    start.energy
+                )
             )
 
         # Adapt step size
@@ -231,9 +235,7 @@ class BaseHMC:
         message = ""
         n_divs = self._num_divs_sample
         if n_divs and self._samples_after_tune == n_divs:
-            message = (
-                "The chain contains only diverging samples. The model is probably misspecified."
-            )
+            message = "The chain contains only diverging samples. The model is probably misspecified."
         elif n_divs == 1:
             message = (
                 "There was 1 divergence after tuning. Increase "
@@ -246,7 +248,9 @@ class BaseHMC:
             )
 
         if message:
-            warning = SamplerWarning(WarningType.DIVERGENCES, message, "error", None, None, None)
+            warning = SamplerWarning(
+                WarningType.DIVERGENCES, message, "error", None, None, None
+            )
             warnings.append(warning)
 
         warnings.extend(self.step_adapt.warnings())
