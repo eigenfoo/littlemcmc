@@ -1,3 +1,5 @@
+"""No-U-Turn sampler."""
+
 from __future__ import division
 
 from collections import namedtuple
@@ -178,6 +180,7 @@ class NUTS(BaseHMC):
         return HMCStepData(tree.proposal, accept_stat, divergence_info, stats)
 
     def warnings(self):
+        """Generate warnings from NUTS sampler."""
         warnings = super(NUTS, self).warnings()
         n_samples = self._samples_after_tune
         n_treedepth = self._reached_max_treedepth
