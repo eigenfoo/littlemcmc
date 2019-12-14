@@ -37,7 +37,7 @@ venv:  # Set up a Python virtual environment for development.
 
 docstyle:
 	@printf "Checking documentation with pydocstyle...\n"
-	pydocstyle littlemcmc/
+	pydocstyle --convention=numpy littlemcmc/
 	@printf "\033[1;34mPydocstyle passes!\033[0m\n\n"
 
 format:
