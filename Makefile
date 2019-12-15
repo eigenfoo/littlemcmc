@@ -1,4 +1,3 @@
-.PHONY: help venv conda pydocstyle blackstyle pylintstyle mypytypes black test lint check
 .DEFAULT_GOAL = help
 
 PYTHON = python
@@ -6,10 +5,12 @@ PIP = pip
 CONDA = conda
 SHELL = bash
 
+.PHONY: help
 help:
 	@printf "Usage:\n"
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?# "}; {printf "\033[1;34mmake %-10s\033[0m%s\n", $$1, $$2}'
 
+.PHONY: conda
 conda:  # Set up a conda environment for development.
 	@printf "Creating conda environment...\n"
 	${CONDA} create --yes --name env-littlemcmc python=3.6
@@ -22,6 +23,7 @@ conda:  # Set up a conda environment for development.
 	)
 	@printf "\n\nConda environment created! \033[1;34mRun \`conda activate env-littlemcmc\` to activate it.\033[0m\n\n\n"
 
+.PHONY: venv
 venv:  # Set up a Python virtual environment for development.
 	@printf "Creating Python virtual environment...\n"
 	rm -rf venv-littlemcmc/
@@ -35,36 +37,45 @@ venv:  # Set up a Python virtual environment for development.
 	)
 	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv-littlemcmc/bin/activate\` to activate it.\033[0m\n\n\n"
 
+.PHONY: pydocstyle
 pydocstyle:
 	@printf "Checking documentation with pydocstyle...\n"
 	pydocstyle --convention=numpy littlemcmc/
 	@printf "\033[1;34mPydocstyle passes!\033[0m\n\n"
 
+.PHONY: blackstyle
 blackstyle:
 	@printf "Checking code style with black...\n"
 	black --check --diff littlemcmc/ tests/ docs/
 	@printf "\033[1;34mBlack passes!\033[0m\n\n"
 
+.PHONY: pylintstyle
 pylintstyle:
 	@printf "Checking code style with pylint...\n"
 	pylint littlemcmc/ tests/
 	@printf "\033[1;34mPylint passes!\033[0m\n\n"
 
+.PHONY: mypytypes
 mypytypes:
 	@printf "Checking code type signatures with mypy...\n"
 	python -m mypy --ignore-missing-imports littlemcmc/
 	@printf "\033[1;34mMypy passes!\033[0m\n\n"
 
+.PHONY: black
 black:  # Format code in-place using black.
 	black littlemcmc/ tests/ docs/
 
+.PHONY: test
 test:  # Test code using pytest.
 	pytest -v littlemcmc tests --doctest-modules --html=testing-report.html --self-contained-html
 
+.PHONY: lint
 lint: pydocstyle blackstyle pylintstyle mypytypes  # Lint code using pydocstyle, black, pylint and mypy.
 
+.PHONY: check
 check: lint test  # Both lint and test code. Runs `make lint` followed by `make test`.
 
+.PHONY: clean
 clean:  # Clean project directories.
 	rm -rf dist/ site/ littlemcmc.egg-info/ pip-wheel-metadata/ __pycache__/ testing-report.html
 	find littlemcmc/ -type d -name "__pycache__" -exec rm -rf {} +
