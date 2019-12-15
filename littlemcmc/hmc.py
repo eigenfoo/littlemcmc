@@ -16,7 +16,8 @@ def unif(step_size, elow=0.85, ehigh=1.15):
 class HamiltonianMC(BaseHMC):
     r"""A sampler for continuous variables based on Hamiltonian mechanics.
 
-    See NUTS sampler for automatically tuned stopping time and step size scaling.
+    See NUTS sampler for automatically tuned stopping time and step size
+    scaling.
     """
 
     name = "hmc"
@@ -73,12 +74,11 @@ class HamiltonianMC(BaseHMC):
             `energy`, and `random` methods. It can be specified instead
             of the scaling matrix.
         target_accept : float, default .8
-            Adapt the step size such that the average acceptance
-            probability across the trajectories are close to target_accept.
-            Higher values for target_accept lead to smaller step sizes.
-            Setting this to higher values like 0.9 or 0.99 can help
-            with sampling from difficult posteriors. Valid values are
-            between 0 and 1 (exclusive).
+            Adapt the step size such that the average acceptance probability
+            across the trajectories are close to target_accept. Higher values
+            for target_accept lead to smaller step sizes. Setting this to higher
+            values like 0.9 or 0.99 can help with sampling from difficult
+            posteriors. Valid values are between 0 and 1 (exclusive).
         gamma : float, default .05
         k : float, default .75
             Parameter for dual averaging for step size adaptation. Values
@@ -88,8 +88,8 @@ class HamiltonianMC(BaseHMC):
             Parameter for dual averaging. Higher values slow initial
             adaptation.
         adapt_step_size : bool, default=True
-            Whether step size adaptation should be enabled. If this is
-            disabled, `k`, `t0`, `gamma` and `target_accept` are ignored.
+            If True, performs dual averaging step size adaptation. If False,
+            `k`, `t0`, `gamma` and `target_accept` are ignored.
         **kwargs : passed to BaseHMC
         """
         super(HamiltonianMC, self).__init__(**kwargs)
