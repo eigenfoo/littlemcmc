@@ -6,3 +6,6 @@ pylint
 pytest
 pytest-cov
 pytest-html
+recommonmark
+sphinx
+sphinx-rtd-theme

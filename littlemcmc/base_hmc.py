@@ -1,4 +1,4 @@
-"""Base class for Hamiltonian Monte Carlo."""
+"""Base class for Hamiltonian Monte Carlo samplers."""
 
 from collections import namedtuple
 import numpy as np
@@ -82,12 +82,18 @@ class BaseHMC:
         dtype
         Emax
         target_accept
-        gamma
-        k
-        t0
-        adapt_step_size
+        gamma : float, default .05
+        k : float, default .75
+            Parameter for dual averaging for step size adaptation. Values
+            between 0.5 and 1 (exclusive) are admissible. Higher values
+            correspond to slower adaptation.
+        t0 : int, default 10
+            Parameter for dual averaging. Higher values slow initial adaptation.
+        adapt_step_size : bool, default=True
+            If True, performs dual averaging step size adaptation. If False,
+            `k`, `t0`, `gamma` and `target_accept` are ignored.
         step_rand : Python callable
-            Called on step size to randomize, immediate before adapting step
+            Called on step size to randomize, immediately before adapting step
             size.
         """
         self._logp_dlogp_func = logp_dlogp_func
