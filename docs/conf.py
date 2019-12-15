@@ -9,11 +9,13 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import littlemcmc
 
 # -- Project information -----------------------------------------------------
 
@@ -31,7 +33,9 @@ release = "0.1.0"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "numpydoc",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx_rtd_theme",
 ]
 
@@ -43,6 +47,18 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+# Generate API documentation when building
+autosummary_generate = True
+numpydoc_show_class_members = False
+
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
+#
+# The short X.Y version.
+version = littlemcmc.__version__
+# The full version, including alpha/beta/rc tags.
+release = version
 
 # -- Options for HTML output -------------------------------------------------
 

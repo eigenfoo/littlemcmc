@@ -1,4 +1,4 @@
-.PHONY: help venv conda docstyle format style types black test lint check
+.PHONY: help venv conda pydocstyle blackstyle pylintstyle mypytypes black test lint check
 .DEFAULT_GOAL = help
 
 PYTHON = python
@@ -35,33 +35,33 @@ venv:  # Set up a Python virtual environment for development.
 	)
 	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv-littlemcmc/bin/activate\` to activate it.\033[0m\n\n\n"
 
-docstyle:
+pydocstyle:
 	@printf "Checking documentation with pydocstyle...\n"
 	pydocstyle --convention=numpy littlemcmc/
 	@printf "\033[1;34mPydocstyle passes!\033[0m\n\n"
 
-format:
+blackstyle:
 	@printf "Checking code style with black...\n"
-	black --check --diff littlemcmc/ tests/
+	black --check --diff littlemcmc/ tests/ docs/
 	@printf "\033[1;34mBlack passes!\033[0m\n\n"
 
-style:
+pylintstyle:
 	@printf "Checking code style with pylint...\n"
-	pylint littlemcmc/
+	pylint littlemcmc/ tests/
 	@printf "\033[1;34mPylint passes!\033[0m\n\n"
 
-types:
+mypytypes:
 	@printf "Checking code type signatures with mypy...\n"
 	python -m mypy --ignore-missing-imports littlemcmc/
 	@printf "\033[1;34mMypy passes!\033[0m\n\n"
 
 black:  # Format code in-place using black.
-	black littlemcmc/ tests/
+	black littlemcmc/ tests/ docs/
 
 test:  # Test code using pytest.
 	pytest -v littlemcmc tests --doctest-modules --html=testing-report.html --self-contained-html
 
-lint: docstyle format style types  # Lint code using pydocstyle, black, pylint and mypy.
+lint: pydocstyle blackstyle pylintstyle mypytypes  # Lint code using pydocstyle, black, pylint and mypy.
 
 check: lint test  # Both lint and test code. Runs `make lint` followed by `make test`.
 

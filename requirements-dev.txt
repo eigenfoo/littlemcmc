@@ -8,5 +8,6 @@ pytest-cov
 pytest-html
 
 # Sphinx requirements
+numpydoc
 sphinx
 sphinx-rtd-theme
