@@ -23,8 +23,6 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     - name: Lint
-      run: |
-        make lint
+      run: make lint
     - name: Test
-      run: |
-        make test
+      run: make test
