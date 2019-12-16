@@ -1,6 +1,7 @@
 # LittleMCMC
 
-![GitHub Actions](https://github.com/eigenfoo/littlemcmc/workflows/littlemcmc/badge.svg)
+![GitHub Actions: Build LittleMCMC](https://github.com/eigenfoo/littlemcmc/workflows/build/badge.svg)
+![GitHub Actions: Lint LittleMCMC](https://github.com/eigenfoo/littlemcmc/workflows/lint/badge.svg)
 
 > Work in progress. Details forthcoming.
 
