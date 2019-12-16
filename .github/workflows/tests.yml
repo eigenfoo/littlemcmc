@@ -1,9 +1,9 @@
-name: build
+name: tests
 
 on: [push]
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     strategy:
