@@ -118,9 +118,6 @@ class BaseHMC:
         self.step_adapt = step_sizes.DualAverageAdaptation(
             self.step_size, target_accept, gamma, k, t0
         )
-        self.integrator = integration.CpuLeapfrogIntegrator(
-            self.potential, self._logp_dlogp_func
-        )
         self.tune = True
 
         if scaling is None and potential is None:
@@ -136,6 +133,9 @@ class BaseHMC:
         else:
             self.potential = quad_potential(scaling, is_cov)
 
+        self.integrator = integration.CpuLeapfrogIntegrator(
+            self.potential, self._logp_dlogp_func
+        )
         self._step_rand = step_rand
         self._warnings = []
         self._samples_after_tune = 0
