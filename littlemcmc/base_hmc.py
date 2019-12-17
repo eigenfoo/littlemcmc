@@ -74,8 +74,6 @@ class BaseHMC:
 
         Parameters
         ----------
-        vars : list of Theano variables
-            FIXME: this can't be correct, right?
         scaling : 1 or 2-dimensional array-like
             Scaling for momentum distribution. 1 dimensional arrays are
             interpreted as a matrix diagonal.

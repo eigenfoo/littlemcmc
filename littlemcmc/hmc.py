@@ -76,8 +76,6 @@ class HamiltonianMC(BaseHMC):
 
         Parameters
         ----------
-        vars : list of theano variables
-            FIXME: this can't be correct, right?
         path_length : float, default=2
             total length to travel
         step_rand : function float -> float, default=unif
