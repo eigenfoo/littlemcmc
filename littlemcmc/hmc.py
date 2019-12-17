@@ -55,13 +55,22 @@ class HamiltonianMC(BaseHMC):
 
     def __init__(
         self,
-        path_length=2.0,
-        adapt_step_size=True,
+        scaling=None,
+        step_scale=0.25,
+        is_cov=False,
+        logp_dlogp_func=None,
+        size=None,
+        potential=None,
+        integrator="leapfrog",
+        dtype=None,
+        Emax=1000,
+        target_accept=0.8,
         gamma=0.05,
         k=0.75,
         t0=10,
-        target_accept=0.8,
-        **kwargs,
+        adapt_step_size=True,
+        step_rand=None,
+        path_length=2.0,
     ):
         """Set up the Hamiltonian Monte Carlo sampler.
 
@@ -106,7 +115,23 @@ class HamiltonianMC(BaseHMC):
             `k`, `t0`, `gamma` and `target_accept` are ignored.
         **kwargs : passed to BaseHMC
         """
-        super(HamiltonianMC, self).__init__(**kwargs)
+        super(HamiltonianMC, self).__init__(
+            scaling=scaling,
+            step_scale=step_scale,
+            is_cov=is_cov,
+            logp_dlogp_func=logp_dlogp_func,
+            size=size,
+            potential=potential,
+            integrator=integrator,
+            dtype=dtype,
+            Emax=Emax,
+            target_accept=target_accept,
+            gamma=gamma,
+            k=k,
+            t0=t0,
+            adapt_step_size=adapt_step_size,
+            step_rand=step_rand,
+        )
         self.path_length = path_length
 
     def _hamiltonian_step(self, start, p0, step_size):
