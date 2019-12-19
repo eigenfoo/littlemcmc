@@ -126,6 +126,7 @@ class BaseHMC:
             potential = QuadPotentialDiagAdapt(size, mean, var, 10)
 
         if scaling is not None and potential is not None:
+            # TODO say this in the main function docstring!
             raise ValueError("Cannot specify both `potential` and `scaling`.")
         elif potential is not None:
             self.potential = potential
