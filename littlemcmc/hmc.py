@@ -117,7 +117,6 @@ class HamiltonianMC(BaseHMC):
             logp_dlogp_func=logp_dlogp_func,
             size=size,
             potential=potential,
-            dtype=dtype,
             Emax=Emax,
             target_accept=target_accept,
             gamma=gamma,
