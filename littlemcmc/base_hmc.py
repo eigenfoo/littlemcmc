@@ -152,7 +152,7 @@ class BaseHMC:
             TODO: document this!
         """
         # FIXME where does generates_stats come from?
-        if self.generates_stats:
+        if self.generates_stats:  # For HMC and NUTs, this is always true.
             apoint, stats = self._astep(array)
             # point = self._logp_dlogp_func.array_to_full_dict(apoint)
             return apoint, stats
