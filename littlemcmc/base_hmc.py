@@ -80,13 +80,15 @@ class BaseHMC:
             `logp_dlogp_func`.
         scaling : 1 or 2-dimensional array-like
             Scaling for momentum distribution. 1 dimensional arrays are
-            interpreted as a matrix diagonal.
+            interpreted as a matrix diagonal. Only one of `scaling` or
+            `potential` may be non-None.
         is_cov : bool
             Treat scaling as a covariance matrix/vector if True, else treat
             it as a precision matrix/vector
         potential : littlemcmc.quadpotential.Potential, optional
             An object that represents the Hamiltonian with methods `velocity`,
-            `energy`, and `random` methods.
+            `energy`, and `random` methods. Only one of `scaling` or `potential`
+            may be non-None.
         target_accept : float
         Emax : float
         adapt_step_size : bool, default=True
@@ -126,7 +128,6 @@ class BaseHMC:
             potential = QuadPotentialDiagAdapt(size, mean, var, 10)
 
         if scaling is not None and potential is not None:
-            # TODO say this in the main function docstring!
             raise ValueError("Cannot specify both `potential` and `scaling`.")
         elif potential is not None:
             self.potential = potential
@@ -151,15 +152,9 @@ class BaseHMC:
         array : array-like
             TODO: document this!
         """
-        # FIXME where does generates_stats come from?
-        if self.generates_stats:  # For HMC and NUTs, this is always true.
-            apoint, stats = self._astep(array)
-            # point = self._logp_dlogp_func.array_to_full_dict(apoint)
-            return apoint, stats
-        else:
-            apoint = self._astep(array)
-            # point = self._logp_dlogp_func.array_to_full_dict(apoint)
-            return apoint
+        # FIXME it looks like we can just call _astep directly!
+        apoint, stats = self._astep(array)
+        return apoint, stats
 
     def stop_tuning(self):
         """Stop tuning."""
@@ -192,6 +187,7 @@ class BaseHMC:
         start = self.integrator.compute_state(q0, p0)
 
         if not np.isfinite(start.energy):
+            # FIXME need to reimplement raise_ok from scratch.
             # self.potential.raise_ok(self._logp_dlogp_func._ordering.vmap)
             raise ValueError(
                 "Bad initial energy: {}. The model might be misspecified.".format(
@@ -223,6 +219,7 @@ class BaseHMC:
                 self._num_divs_sample += 1
                 # We don't want to fill up all memory with divergence info
                 if self._num_divs_sample < 100:
+                    # FIXME what to do about array_to_dict?
                     point = self._logp_dlogp_func.array_to_dict(info.state.q)
                 else:
                     point = None
