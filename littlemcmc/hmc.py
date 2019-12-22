@@ -90,6 +90,12 @@ class HamiltonianMC(BaseHMC):
             An object that represents the Hamiltonian with methods `velocity`,
             `energy`, and `random` methods.
         target_accept : float
+            Adapt the step size such that the average acceptance
+            probability across the trajectories are close to target_accept.
+            Higher values for target_accept lead to smaller step sizes.
+            Setting this to higher values like 0.9 or 0.99 can help
+            with sampling from difficult posteriors. Valid values are
+            between 0 and 1 (exclusive).
         Emax : float
         adapt_step_size : bool, default=True
             If True, performs dual averaging step size adaptation. If False,
