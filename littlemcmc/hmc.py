@@ -55,58 +55,82 @@ class HamiltonianMC(BaseHMC):
 
     def __init__(
         self,
-        path_length=2.0,
+        logp_dlogp_func=None,
+        size=None,
+        scaling=None,
+        is_cov=False,
+        potential=None,
+        target_accept=0.8,
+        Emax=1000,
         adapt_step_size=True,
+        step_scale=0.25,
         gamma=0.05,
         k=0.75,
         t0=10,
-        target_accept=0.8,
-        **kwargs,
+        step_rand=None,
+        path_length=2.0,
     ):
         """Set up the Hamiltonian Monte Carlo sampler.
 
         Parameters
         ----------
-        vars : list of theano variables
-            FIXME: this can't be correct, right?
-        path_length : float, default=2
-            total length to travel
-        step_rand : function float -> float, default=unif
-            A function which takes the step size and returns an new one used to
-            randomize the step size at each iteration.
-        step_scale : float, default=0.25
-            Initial size of steps to take, automatically scaled down
-            by 1/n**(1/4).
-        scaling : array_like, ndim = {1,2}
-            The inverse mass, or precision matrix. One dimensional arrays are
-            interpreted as diagonal matrices. If `is_cov` is set to True,
-            this will be interpreded as the mass or covariance matrix.
-        is_cov : bool, default=False
-            Treat the scaling as mass or covariance matrix.
-        potential : Potential, optional
+        logp_dlogp_func : Python callable
+            Python callable that returns the log-probability and derivative of
+            the log-probability, respectively.
+        size : int
+            Total number of parameters. Dimensionality of the output of
+            `logp_dlogp_func`.
+        scaling : 1 or 2-dimensional array-like
+            Scaling for momentum distribution. 1 dimensional arrays are
+            interpreted as a matrix diagonal.
+        is_cov : bool
+            Treat scaling as a covariance matrix/vector if True, else treat
+            it as a precision matrix/vector
+        potential : littlemcmc.quadpotential.Potential, optional
             An object that represents the Hamiltonian with methods `velocity`,
-            `energy`, and `random` methods. It can be specified instead
-            of the scaling matrix.
-        target_accept : float, default .8
-            Adapt the step size such that the average acceptance probability
-            across the trajectories are close to target_accept. Higher values
-            for target_accept lead to smaller step sizes. Setting this to higher
-            values like 0.9 or 0.99 can help with sampling from difficult
-            posteriors. Valid values are between 0 and 1 (exclusive).
+            `energy`, and `random` methods.
+        target_accept : float
+            Adapt the step size such that the average acceptance
+            probability across the trajectories are close to target_accept.
+            Higher values for target_accept lead to smaller step sizes.
+            Setting this to higher values like 0.9 or 0.99 can help
+            with sampling from difficult posteriors. Valid values are
+            between 0 and 1 (exclusive).
+        Emax : float
+        adapt_step_size : bool, default=True
+            If True, performs dual averaging step size adaptation. If False,
+            `k`, `t0`, `gamma` and `target_accept` are ignored.
+        step_scale : float
+            Size of steps to take, automatically scaled down by 1 / (size ** 0.25)
         gamma : float, default .05
         k : float, default .75
             Parameter for dual averaging for step size adaptation. Values
             between 0.5 and 1 (exclusive) are admissible. Higher values
             correspond to slower adaptation.
         t0 : int, default 10
-            Parameter for dual averaging. Higher values slow initial
-            adaptation.
-        adapt_step_size : bool, default=True
-            If True, performs dual averaging step size adaptation. If False,
-            `k`, `t0`, `gamma` and `target_accept` are ignored.
-        **kwargs : passed to BaseHMC
+            Parameter for dual averaging. Higher values slow initial adaptation.
+        step_rand : Python callable
+            # FIXME rename this to callback or something
+            Called on step size to randomize, immediately before adapting step
+            size.
+        path_length : float, default=2
+            total length to travel
         """
-        super(HamiltonianMC, self).__init__(**kwargs)
+        super(HamiltonianMC, self).__init__(
+            scaling=scaling,
+            step_scale=step_scale,
+            is_cov=is_cov,
+            logp_dlogp_func=logp_dlogp_func,
+            size=size,
+            potential=potential,
+            Emax=Emax,
+            target_accept=target_accept,
+            gamma=gamma,
+            k=k,
+            t0=t0,
+            adapt_step_size=adapt_step_size,
+            step_rand=step_rand,
+        )
         self.path_length = path_length
 
     def _hamiltonian_step(self, start, p0, step_size):

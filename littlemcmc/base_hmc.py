@@ -54,48 +54,48 @@ class BaseHMC:
 
     def __init__(
         self,
-        vars=None,
-        scaling=None,
-        step_scale=0.25,
-        is_cov=False,
-        logp_dlogp_func=None,
-        size=None,
-        potential=None,
-        integrator="leapfrog",
-        dtype=None,
-        Emax=1000,
-        target_accept=0.8,
-        gamma=0.05,
-        k=0.75,
-        t0=10,
-        adapt_step_size=True,
-        step_rand=None,
+        logp_dlogp_func,
+        size,
+        scaling,
+        is_cov,
+        potential,
+        target_accept,
+        Emax,
+        adapt_step_size,
+        step_scale,
+        gamma,
+        k,
+        t0,
+        step_rand,
     ):
         """Set up Hamiltonian samplers with common structures.
 
         Parameters
         ----------
-        vars : list of Theano variables
-            FIXME: this can't be correct, right?
+        logp_dlogp_func : Python callable
+            Python callable that returns the log-probability and derivative of
+            the log-probability, respectively.
+        size : int
+            Total number of parameters. Dimensionality of the output of
+            `logp_dlogp_func`.
         scaling : 1 or 2-dimensional array-like
             Scaling for momentum distribution. 1 dimensional arrays are
-            interpreted as a matrix diagonal.
-        step_scale : float, default=0.25
-            Size of steps to take, automatically scaled down by 1 / (size ** 0.25)
-        is_cov : bool, default=False
+            interpreted as a matrix diagonal. Only one of `scaling` or
+            `potential` may be non-None.
+        is_cov : bool
             Treat scaling as a covariance matrix/vector if True, else treat
             it as a precision matrix/vector
-        logp_dlog_func : Python callable
-            TODO: document this!
-        size : tuple
-            TODO: document this!
-        potential: littlemcmc.quadpotential.Potential, optional
+        potential : littlemcmc.quadpotential.Potential, optional
             An object that represents the Hamiltonian with methods `velocity`,
-            `energy`, and `random` methods.
-        integrator
-        dtype
-        Emax
-        target_accept
+            `energy`, and `random` methods. Only one of `scaling` or `potential`
+            may be non-None.
+        target_accept : float
+        Emax : float
+        adapt_step_size : bool, default=True
+            If True, performs dual averaging step size adaptation. If False,
+            `k`, `t0`, `gamma` and `target_accept` are ignored.
+        step_scale : float
+            Size of steps to take, automatically scaled down by 1 / (size ** 0.25)
         gamma : float, default .05
         k : float, default .75
             Parameter for dual averaging for step size adaptation. Values
@@ -103,10 +103,8 @@ class BaseHMC:
             correspond to slower adaptation.
         t0 : int, default 10
             Parameter for dual averaging. Higher values slow initial adaptation.
-        adapt_step_size : bool, default=True
-            If True, performs dual averaging step size adaptation. If False,
-            `k`, `t0`, `gamma` and `target_accept` are ignored.
         step_rand : Python callable
+            # FIXME rename this to callback or something
             Called on step size to randomize, immediately before adapting step
             size.
         """
@@ -120,9 +118,6 @@ class BaseHMC:
         # FIXME: find a better name that step_adapt
         self.step_adapt = step_sizes.DualAverageAdaptation(
             self.step_size, target_accept, gamma, k, t0
-        )
-        self.integrator = integration.CpuLeapfrogIntegrator(
-            self.potential, self._logp_dlogp_func
         )
         self.tune = True
 
@@ -139,6 +134,9 @@ class BaseHMC:
         else:
             self.potential = quad_potential(scaling, is_cov)
 
+        self.integrator = integration.CpuLeapfrogIntegrator(
+            self.potential, self._logp_dlogp_func
+        )
         self._step_rand = step_rand
         self._warnings = []
         self._samples_after_tune = 0
@@ -195,6 +193,7 @@ class BaseHMC:
         start = self.integrator.compute_state(q0, p0)
 
         if not np.isfinite(start.energy):
+            # FIXME need to reimplement raise_ok from scratch.
             # self.potential.raise_ok(self._logp_dlogp_func._ordering.vmap)
             raise ValueError(
                 "Bad initial energy: {}. The model might be misspecified.".format(
@@ -226,6 +225,7 @@ class BaseHMC:
                 self._num_divs_sample += 1
                 # We don't want to fill up all memory with divergence info
                 if self._num_divs_sample < 100:
+                    # FIXME what to do about array_to_dict?
                     point = self._logp_dlogp_func.array_to_dict(info.state.q)
                 else:
                     point = None

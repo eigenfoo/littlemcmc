@@ -1,5 +1,4 @@
 black
-mock
 mypy
 pydocstyle
 pylint

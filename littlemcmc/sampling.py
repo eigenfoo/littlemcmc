@@ -12,20 +12,26 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+"""Sampling driver functions (unrelated to PyMC3's `sampling.py`)."""
+
 import numpy as np
-from littlemcmc.base_hmc import metropolis_select
 
 
-def test_metropolis_select():
-    q = "q"
-    q0 = "q0"
+def sample(logp_dlogp_func, size, stepper, draws, tune, init=None):
+    """Sample."""
+    if init is not None:
+        q = init
+    else:
+        q = np.zeros(size)
 
-    # Corresponds to acceptance rate of 1
-    selected, accepted = metropolis_select(np.log(1), q, q0)
-    assert selected == q
-    assert accepted
+    trace = np.zeros([size, tune + draws])
+    stats = []
 
-    # Corresponds to acceptance rate of 0
-    selected, accepted = metropolis_select(-np.inf, q, q0)
-    assert selected == q0
-    assert not accepted
+    for i in range(tune + draws):
+        q, step_stats = stepper._astep(q)
+        trace[:, i] = q
+        stats.extend(step_stats)
+        if i == tune:
+            stepper.stop_tuning()
+
+    return trace, stats
