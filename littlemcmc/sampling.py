@@ -12,15 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-""" Sampling driver functions (unrelated to PyMC3's `sampling.py`). """
+"""Sampling driver functions (unrelated to PyMC3's `sampling.py`)."""
 
 import numpy as np
-import scipy.stats
-import littlemcmc as lmc
 
 
 def sample(logp_dlogp_func, size, stepper, draws, tune, init=None):
-    """Sample"""
+    """Sample."""
     if init is not None:
         q = init
     else:
