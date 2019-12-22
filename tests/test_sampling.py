@@ -57,3 +57,15 @@ def test_hmc_recovers_1d_normal():
 
     assert np.allclose(np.mean(trace[:, 1000:]), 0, atol=0.1)
     assert np.allclose(np.std(trace[:, 1000:]), 1, atol=0.1)
+
+
+def test_nuts_recovers_1d_normal():
+    size = 1
+    stepper = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
+    draws = 1000
+    tune = 1000
+    init = None
+    trace, stats = lmc.sample(logp_dlogp_func, size, stepper, draws, tune, init)
+
+    assert np.allclose(np.mean(trace[:, 1000:]), 0, atol=0.1)
+    assert np.allclose(np.std(trace[:, 1000:]), 1, atol=0.1)
