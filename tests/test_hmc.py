@@ -17,7 +17,7 @@ def test_leapfrog_reversible():
     q = np.random.randn(size)
     start = step.integrator.compute_state(p, q)
 
-    for epsilon in [.01, .1]:
+    for epsilon in [0.01, 0.1]:
         for n_steps in [1, 2, 3, 4, 20]:
             state = start
             for _ in range(n_steps):
