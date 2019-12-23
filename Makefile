@@ -1,9 +1,15 @@
 .DEFAULT_GOAL = help
 
-PYTHON = python
-PIP = pip
-CONDA = conda
-SHELL = bash
+PYTHON := python
+PIP := pip
+CONDA := conda
+SHELL := bash
+
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
 
 .PHONY: help
 help:
@@ -14,13 +20,11 @@ help:
 conda:  # Set up a conda environment for development.
 	@printf "Creating conda environment...\n"
 	${CONDA} create --yes --name env-littlemcmc python=3.6
-	( \
-	${CONDA} activate env-littlemcmc; \
-	${PIP} install -U pip; \
-	${PIP} install -r requirements.txt; \
-	${PIP} install -r requirements-dev.txt; \
-	${CONDA} deactivate; \
-	)
+	${CONDA} activate env-littlemcmc
+	${PIP} install -U pip
+	${PIP} install -r requirements.txt
+	${PIP} install -r requirements-dev.txt
+	${CONDA} deactivate
 	@printf "\n\nConda environment created! \033[1;34mRun \`conda activate env-littlemcmc\` to activate it.\033[0m\n\n\n"
 
 .PHONY: venv
@@ -28,13 +32,11 @@ venv:  # Set up a Python virtual environment for development.
 	@printf "Creating Python virtual environment...\n"
 	rm -rf venv-littlemcmc/
 	${PYTHON} -m venv venv-littlemcmc/
-	( \
-	source venv-littlemcmc/bin/activate; \
-	${PIP} install -U pip; \
-	${PIP} install -r requirements.txt; \
-	${PIP} install -r requirements-dev.txt; \
-	deactivate; \
-	)
+	source venv-littlemcmc/bin/activate
+	${PIP} install -U pip
+	${PIP} install -r requirements.txt
+	${PIP} install -r requirements-dev.txt
+	deactivate
 	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv-littlemcmc/bin/activate\` to activate it.\033[0m\n\n\n"
 
 .PHONY: blackstyle
