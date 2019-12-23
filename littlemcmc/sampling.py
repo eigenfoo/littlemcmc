@@ -33,7 +33,7 @@ def _sample_one_chain(
     random_seed=None,
     discard_tuned_samples=True,
 ):
-    """Helper function to sample one chain."""
+    """Sample one chain in one process."""
     if random_seed is not None:
         np.random.seed(random_seed)
 
