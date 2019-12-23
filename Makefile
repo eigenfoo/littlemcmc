@@ -80,6 +80,6 @@ check: lint test  # Both lint and test code. Runs `make lint` followed by `make 
 .PHONY: clean
 clean:  # Clean project directories.
 	rm -rf dist/ site/ littlemcmc.egg-info/ pip-wheel-metadata/ __pycache__/ testing-report.html
-	find littlemcmc/ -type d -name "__pycache__" -exec rm -rf {} +
-	find littlemcmc/ -type d -name "__pycache__" -delete
-	find littlemcmc/ -type f -name "*.pyc" -delete
+	find littlemcmc/ tests/ -type d -name "__pycache__" -exec rm -rf {} +
+	find littlemcmc/ tests/ -type d -name "__pycache__" -delete
+	find littlemcmc/ tests/ -type f -name "*.pyc" -delete
