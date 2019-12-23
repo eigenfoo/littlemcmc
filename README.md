@@ -2,7 +2,8 @@
 
 ![Tests Status](https://github.com/eigenfoo/littlemcmc/workflows/tests/badge.svg)
 ![Lint Status](https://github.com/eigenfoo/littlemcmc/workflows/lint/badge.svg)
-![License](https://img.shields.io/github/license/eigenfoo/littlemcmc)
+[![Coverage Status](https://codecov.io/gh/eigenfoo/littlemcmc/branch/master/graph/badge.svg)](https://codecov.io/gh/eigenfoo/littlemcmc)
+[![License](https://img.shields.io/github/license/eigenfoo/littlemcmc)](https://github.com/eigenfoo/littlemcmc/blob/master/LICENSE.littlemcmc.txt)
 
 > littlemcmc &nbsp; &nbsp; /lɪtəl ɛm si ɛm si/ &nbsp; &nbsp; _noun_
 >
