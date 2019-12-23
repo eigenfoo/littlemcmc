@@ -69,7 +69,7 @@ black:  # Format code in-place using black.
 
 .PHONY: test
 test:  # Test code using pytest.
-	pytest -v littlemcmc tests --doctest-modules --html=testing-report.html --self-contained-html
+	pytest -v littlemcmc tests --doctest-modules --html=testing-report.html --self-contained-html --cov=./ --cov-report=xml
 
 .PHONY: lint
 lint: blackstyle pylintstyle pydocstyle mypytypes  # Lint code using black, pylint, pydocstyle and mypy.
@@ -79,7 +79,7 @@ check: lint test  # Both lint and test code. Runs `make lint` followed by `make 
 
 .PHONY: clean
 clean:  # Clean project directories.
-	rm -rf dist/ site/ littlemcmc.egg-info/ pip-wheel-metadata/ __pycache__/ testing-report.html
+	rm -rf dist/ site/ littlemcmc.egg-info/ pip-wheel-metadata/ __pycache__/ coverage.xml
 	find littlemcmc/ tests/ -type d -name "__pycache__" -exec rm -rf {} +
 	find littlemcmc/ tests/ -type d -name "__pycache__" -delete
 	find littlemcmc/ tests/ -type f -name "*.pyc" -delete
