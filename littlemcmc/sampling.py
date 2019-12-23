@@ -23,7 +23,7 @@ import numpy as np
 _log = logging.getLogger("littlemcmc")
 
 
-def sample_one_chain(
+def _sample_one_chain(
     logp_dlogp_func,
     size,
     stepper,
@@ -33,7 +33,7 @@ def sample_one_chain(
     random_seed=None,
     discard_tuned_samples=True,
 ):
-    """Sample."""
+    """Helper function to sample one chain."""
     if random_seed is not None:
         np.random.seed(random_seed)
 
@@ -70,6 +70,7 @@ def sample(
     random_seed=None,
     discard_tuned_samples=True,
 ):
+    """Sample."""
     if cores is None:
         cores = min(4, os.cpu_count())
     if chains is None:
