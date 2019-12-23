@@ -13,21 +13,9 @@
 #  limitations under the License.
 
 import numpy as np
-import scipy.stats
 import littlemcmc as lmc
 from littlemcmc.sampling import _sample_one_chain
-
-
-def logp_func(x, loc=0, scale=1):
-    return np.log(scipy.stats.norm.pdf(x, loc=loc, scale=scale))
-
-
-def dlogp_func(x, loc=0, scale=1):
-    return -(x - loc) / scale
-
-
-def logp_dlogp_func(x, loc=0, scale=1):
-    return logp_func(x, loc=loc, scale=scale), dlogp_func(x, loc=loc, scale=scale)
+from test_utils import logp_dlogp_func
 
 
 def test_hmc_sampling_runs():
