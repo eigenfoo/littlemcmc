@@ -4,11 +4,12 @@
 ![Lint Status](https://github.com/eigenfoo/littlemcmc/workflows/lint/badge.svg)
 ![License](https://img.shields.io/github/license/eigenfoo/littlemcmc)
 
-> littlemcmc
+> littlemcmc    ˈlɪtəlˈɛmˈsiˈɛmˈsi    _noun_
 >
 > A lightweight and performant implementation of HMC and NUTS in Python, spun
-> out of [the PyMC4 project](https://github.com/pymc-devs/pymc4). Not to be
-> confused with [minimc](https://github.com/ColCarroll/minimc).
+> out of [the PyMC4 project](https://github.com/pymc-devs/pymc4).
+>
+> Not to be confused with [minimc](https://github.com/ColCarroll/minimc).
 
 ## License
 
