@@ -1,3 +1,4 @@
+joblib
 numpy
 scipy>=0.18.1
 theano
