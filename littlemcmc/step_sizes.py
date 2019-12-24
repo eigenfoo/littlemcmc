@@ -68,9 +68,8 @@ class DualAverageAdaptation(object):
 
         Parameters
         ----------
-        accept_stat
-            TODO: document this!
-            HMC step acceptance statistics.
+        accept_stat : float
+            HMC step acceptance statistic.
         tune : bool
             True during tuning, else False.
         """
