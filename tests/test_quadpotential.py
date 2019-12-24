@@ -112,9 +112,7 @@ def test_random_dense():
             quadpotential.QuadPotentialFullInv(inv),
         ]
         if quadpotential.chol_available:
-            pot = quadpotential.QuadPotential_Sparse(
-                scipy.sparse.csc_matrix(cov)
-            )
+            pot = quadpotential.QuadPotential_Sparse(scipy.sparse.csc_matrix(cov))
             pots.append(pot)
         for pot in pots:
             cov_ = np.cov(np.array([pot.random() for _ in range(1000)]).T)
@@ -262,9 +260,7 @@ def test_full_adapt_sampling(seed=289586):
     with pymc3.Model() as model:
         pymc3.MvNormal("a", mu=np.zeros(len(L)), chol=L, shape=len(L))
 
-        pot = quadpotential.QuadPotentialFullAdapt(
-            model.ndim, np.zeros(model.ndim)
-        )
+        pot = quadpotential.QuadPotentialFullAdapt(model.ndim, np.zeros(model.ndim))
         step = pymc3.NUTS(model=model, potential=pot)
         pymc3.sample(
             draws=10, tune=1000, random_seed=seed, step=step, cores=1, chains=1
