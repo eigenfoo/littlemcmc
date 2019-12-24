@@ -8,13 +8,13 @@
 > littlemcmc &nbsp; &nbsp; /lɪtəl ɛm si ɛm si/ &nbsp; &nbsp; _noun_
 >
 > A lightweight and performant implementation of HMC and NUTS in Python, spun
-> out of [the PyMC4 project](https://github.com/pymc-devs/pymc4). Not to be
-> confused with [minimc](https://github.com/ColCarroll/minimc).
+> out of [the PyMC4 project](https://github.com/pymc-devs). Not to be confused
+> with [minimc](https://github.com/ColCarroll/minimc).
 
 ## License
 
-LittleMCMC is modified from [the PyMC4
-project](https://github.com/pymc-devs/pymc4/), which is distributed under the
-[Apache-2.0](https://github.com/pymc-devs/pymc4/blob/master/LICENSE.txt)
-license. All modifications from PyMC4 are distributed under [an identical
-license](https://github.com/eigenfoo/littlemcmc/blob/master/LICENSE).
+LittleMCMC is modified from [the PyMC3 and PyMC4
+projects](https://github.com/pymc-devs/), both of which are distributed under
+the Apache-2.0 license. A copy of both projects' license files are distributed
+with LittleMCMC. All modifications from PyMC are distributed under [an identical
+Apache-2.0 license](https://github.com/eigenfoo/littlemcmc/blob/master/LICENSE).
