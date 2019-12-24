@@ -54,6 +54,7 @@ def _sample_one_chain(
 
     if discard_tuned_samples:
         trace = trace[:, tune:]
+        stats = stats[tune:]
 
     return trace, stats
 
@@ -94,8 +95,8 @@ def sample(
         _log.warning(msg)
 
     _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
-    asdf = Parallel(n_jobs=cores)(
-        delayed(sample_one_chain)(
+    results = Parallel(n_jobs=cores)(
+        delayed(_sample_one_chain)(
             logp_dlogp_func=logp_dlogp_func,
             size=size,
             stepper=stepper,
@@ -107,3 +108,8 @@ def sample(
         )
         for i in random_seed
     )
+
+    trace = np.hstack([chain_trace for (chain_trace, _) in results])
+    stats = [chain_stats for (_, chain_stats) in results]  # FIXME reshape stats
+
+    return trace, stats

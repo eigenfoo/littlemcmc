@@ -23,10 +23,6 @@ from .base_hmc import BaseHMC, HMCStepData, DivergenceInfo
 __all__ = ["HamiltonianMC"]
 
 
-def unif(step_size, elow=0.85, ehigh=1.15):
-    return np.random.uniform(elow, ehigh) * step_size
-
-
 class HamiltonianMC(BaseHMC):
     r"""A sampler for continuous variables based on Hamiltonian mechanics.
 

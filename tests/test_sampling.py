@@ -13,21 +13,9 @@
 #  limitations under the License.
 
 import numpy as np
-import scipy.stats
 import littlemcmc as lmc
 from littlemcmc.sampling import _sample_one_chain
-
-
-def logp_func(x, loc=0, scale=1):
-    return np.log(scipy.stats.norm.pdf(x, loc=loc, scale=scale))
-
-
-def dlogp_func(x, loc=0, scale=1):
-    return -(x - loc) / scale
-
-
-def logp_dlogp_func(x, loc=0, scale=1):
-    return logp_func(x, loc=loc, scale=scale), dlogp_func(x, loc=loc, scale=scale)
+from test_utils import logp_dlogp_func
 
 
 def test_hmc_sampling_runs():
@@ -35,7 +23,13 @@ def test_hmc_sampling_runs():
     stepper = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size)
     draws = 1
     tune = 1
-    trace, stats = _sample_one_chain(logp_dlogp_func, size, stepper, draws, tune)
+    chains = 1
+    cores = 1
+    trace, stats = lmc.sample(
+        logp_dlogp_func, size, stepper, draws, tune, chains=chains, cores=cores
+    )
+    assert trace.shape == (1, 1)
+    assert len(stats) == 1
 
 
 def test_nuts_sampling_runs():
@@ -43,7 +37,13 @@ def test_nuts_sampling_runs():
     stepper = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
     draws = 1
     tune = 1
-    trace, stats = _sample_one_chain(logp_dlogp_func, size, stepper, draws, tune)
+    chains = 1
+    cores = 1
+    trace, stats = lmc.sample(
+        logp_dlogp_func, size, stepper, draws, tune, chains=chains, cores=cores
+    )
+    assert trace.shape == (1, 1)
+    assert len(stats) == 1
 
 
 def test_hmc_recovers_1d_normal():
@@ -51,7 +51,11 @@ def test_hmc_recovers_1d_normal():
     stepper = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size)
     draws = 1000
     tune = 1000
-    trace, stats = _sample_one_chain(logp_dlogp_func, size, stepper, draws, tune)
+    chains = 1
+    cores = 1
+    trace, stats = lmc.sample(
+        logp_dlogp_func, size, stepper, draws, tune, chains=chains, cores=cores
+    )
 
     assert np.allclose(np.mean(trace), 0, atol=1)
     assert np.allclose(np.std(trace), 1, atol=1)
@@ -62,7 +66,11 @@ def test_nuts_recovers_1d_normal():
     stepper = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
     draws = 1000
     tune = 1000
-    trace, stats = _sample_one_chain(logp_dlogp_func, size, stepper, draws, tune)
+    chains = 1
+    cores = 1
+    trace, stats = lmc.sample(
+        logp_dlogp_func, size, stepper, draws, tune, chains=chains, cores=cores
+    )
 
     assert np.allclose(np.mean(trace), 0, atol=1)
     assert np.allclose(np.std(trace), 1, atol=1)

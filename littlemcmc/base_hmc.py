@@ -25,30 +25,6 @@ HMCStepData = namedtuple("HMCStepData", "end, accept_stat, divergence_info, stat
 DivergenceInfo = namedtuple("DivergenceInfo", "message, exec_info, state")
 
 
-def metropolis_select(log_accept_rate, q, q0):
-    """Perform rejection/acceptance step for Metropolis class samplers.
-
-    Returns the new sample q if a uniform random number is less than the
-    Metropolis acceptance rate (`mr`), and the old sample otherwise, along
-    with a boolean indicating whether the sample was accepted.
-
-    Parameters
-    ----------
-    log_accept_rate : float
-        Log of Metropolis acceptance rate
-    q : Proposed sample
-    q0 : Current sample
-
-    Returns
-    -------
-    q or q0, boolean
-    """
-    if np.isfinite(log_accept_rate) and np.log(np.random.uniform()) < log_accept_rate:
-        return q, True
-    else:
-        return q0, False
-
-
 class BaseHMC:
     """Superclass to implement Hamiltonian Monte Carlo."""
 

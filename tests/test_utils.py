@@ -13,19 +13,16 @@
 #  limitations under the License.
 
 import numpy as np
-from littlemcmc.base_hmc import metropolis_select
+import scipy.stats
 
 
-def test_metropolis_select():
-    q = "q"
-    q0 = "q0"
+def logp_func(x, loc=0, scale=1):
+    return np.log(scipy.stats.norm.pdf(x, loc=loc, scale=scale))
 
-    # Corresponds to acceptance rate of 1
-    selected, accepted = metropolis_select(np.log(1), q, q0)
-    assert selected == q
-    assert accepted
 
-    # Corresponds to acceptance rate of 0
-    selected, accepted = metropolis_select(-np.inf, q, q0)
-    assert selected == q0
-    assert not accepted
+def dlogp_func(x, loc=0, scale=1):
+    return -(x - loc) / scale
+
+
+def logp_dlogp_func(x, loc=0, scale=1):
+    return logp_func(x, loc=loc, scale=scale), dlogp_func(x, loc=loc, scale=scale)
