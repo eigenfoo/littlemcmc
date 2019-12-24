@@ -16,15 +16,17 @@
 
 import numpy as np
 from numpy.random import normal
+import scipy
 from scipy.sparse import issparse
-import scipy.sparse.linalg as slinalg
-from scipy import linalg, stats
 
 
 __all__ = [
     "quad_potential",
     "QuadPotentialDiag",
+    "QuadPotentialFull",
+    "QuadPotentialFullInv",
     "QuadPotentialDiagAdapt",
+    "QuadPotentialFullAdapt",
     "isquadpotential",
     "QuadPotentialLowRank",
 ]
@@ -47,9 +49,7 @@ def quad_potential(C, is_cov):
     q : Quadpotential
     """
     if issparse(C):
-        if not chol_available:
-            raise ImportError("Sparse mass matrices require scikits.sparse")
-        elif is_cov:
+        if is_cov:
             return QuadPotentialSparse(C)
         else:
             raise ValueError("Sparse precision matrices are not supported")
@@ -61,9 +61,10 @@ def quad_potential(C, is_cov):
         else:
             return QuadPotentialDiag(1.0 / C)
     else:
-        raise NotImplementedError(
-            "QuadPotentialFull and QuadPotentialFullInv not yet implemented"
-        )
+        if is_cov:
+            return QuadPotentialFull(C)
+        else:
+            return QuadPotentialFullInv(C)
 
 
 def partial_check_positive_definite(C):
@@ -157,6 +158,7 @@ class QuadPotentialDiagAdapt(QuadPotential):
         initial_diag=None,
         initial_weight=0,
         adaptation_window=101,
+        adaptation_window_multiplier=1,
         dtype=None,
     ):
         """Set up a diagonal mass matrix."""
@@ -187,7 +189,6 @@ class QuadPotentialDiagAdapt(QuadPotential):
         self.dtype = dtype
         self._n = n
         self._var = np.array(initial_diag, dtype=self.dtype, copy=True)
-        # self._var_theano = theano.shared(self._var)
         self._stds = np.sqrt(initial_diag)
         self._inv_stds = 1.0 / self._stds
         self._foreground_var = _WeightedVariance(
@@ -196,6 +197,7 @@ class QuadPotentialDiagAdapt(QuadPotential):
         self._background_var = _WeightedVariance(self._n, dtype=self.dtype)
         self._n_samples = 0
         self.adaptation_window = adaptation_window
+        self.adaptation_window_multiplier = float(adaptation_window_multiplier)
 
     def velocity(self, x, out=None):
         """Compute the current velocity at a position in parameter space."""
@@ -221,22 +223,22 @@ class QuadPotentialDiagAdapt(QuadPotential):
         weightvar.current_variance(out=self._var)
         np.sqrt(self._var, out=self._stds)
         np.divide(1, self._stds, out=self._inv_stds)
-        # self._var_theano.set_value(self._var)
 
     def update(self, sample, grad, tune):
         """Inform the potential about a new sample during tuning."""
         if not tune:
             return
 
-        window = self.adaptation_window
-
         self._foreground_var.add_sample(sample, weight=1)
         self._background_var.add_sample(sample, weight=1)
         self._update_from_weightvar(self._foreground_var)
 
-        if self._n_samples > 0 and self._n_samples % window == 0:
+        if self._n_samples > 0 and self._n_samples % self.adaptation_window == 0:
             self._foreground_var = self._background_var
             self._background_var = _WeightedVariance(self._n, dtype=self.dtype)
+            self.adaptation_window = int(
+                self.adaptation_window * self.adaptation_window_multiplier
+            )
 
         self._n_samples += 1
 
@@ -385,143 +387,234 @@ class QuadPotentialDiag(QuadPotential):
         return 0.5 * np.dot(x, v_out)
 
 
-def add_ADATv(A, v, out, diag=None, beta=0.0, work=None):
-    """Run out = beta * out + A @ np.diag(D) @ A.T @ v."""
-    if work is None:
-        work = np.empty(A.shape[1])
-    linalg.blas.dgemv(1.0, A, v, y=work, trans=1, beta=0.0, overwrite_y=True)
-    if diag is not None:
-        work *= diag
-    linalg.blas.dgemv(1.0, A, work, y=out, beta=beta, overwrite_y=True)
+class QuadPotentialFullInv(QuadPotential):
+    """QuadPotential object for Hamiltonian calculations using inverse of covariance matrix."""
+
+    def __init__(self, A, dtype=None):
+        """Compute the lower cholesky decomposition of the potential.
+
+        Parameters
+        ----------
+        A : matrix, ndim = 2
+           Inverse of covariance matrix for the potential vector
+        """
+        if dtype is None:
+            dtype = "float32"
+        self.dtype = dtype
+        self.L = scipy.linalg.cholesky(A, lower=True)
+
+    def velocity(self, x, out=None):
+        """Compute the current velocity at a position in parameter space."""
+        vel = scipy.linalg.cho_solve((self.L, True), x)
+        if out is None:
+            return vel
+        out[:] = vel
+
+    def random(self):
+        """Draw random value from QuadPotential."""
+        n = normal(size=self.L.shape[0])
+        return np.dot(self.L, n)
+
+    def energy(self, x, velocity=None):
+        """Compute kinetic energy at a position in parameter space."""
+        if velocity is None:
+            velocity = self.velocity(x)
+        return 0.5 * x.dot(velocity)
+
+    def velocity_energy(self, x, v_out):
+        """Compute velocity and return kinetic energy at a position in parameter space."""
+        self.velocity(x, out=v_out)
+        return 0.5 * np.dot(x, v_out)
 
 
-class Covariance:
-    def __init__(self, n_dim, n_svd, n_approx, values, grads, diag=None):
-        assert n_svd <= len(values)
-        assert values.shape == grads.shape
+class QuadPotentialFull(QuadPotential):
+    """Basic QuadPotential object for Hamiltonian calculations."""
 
-        self.values = values - values.mean(0)
-        self.grads = grads - grads.mean(0)
+    def __init__(self, cov, dtype=None):
+        """Compute the lower cholesky decomposition of the potential.
 
-        val_variance = self.values.var(0)
-        grd_variance = self.grads.var(0)
-        self._val_var = val_variance
-        self._grd_var = grd_variance
-        if diag == "mean":
-            self.diag = np.sqrt(val_variance / grd_variance)
-        elif diag == "values":
-            self.diag = np.sqrt(val_variance)
-        elif isinstance(diag, np.ndarray):
-            self.diag = np.sqrt(diag)
-        else:
-            raise ValueError("Unknown diag approximation: %s" % diag)
-        self.invsqrtdiag = 1 / np.sqrt(self.diag)
-        self.values /= self.diag[None, :]
-        self.grads *= self.diag[None, :]
+        Parameters
+        ----------
+        A : matrix, ndim = 2
+            scaling matrix for the potential vector
+        """
+        if dtype is None:
+            dtype = "float32"
+        self.dtype = dtype
+        self._cov = np.array(cov, dtype=self.dtype, copy=True)
+        self._chol = scipy.linalg.cholesky(self._cov, lower=True)
+        self._n = len(self._cov)
 
-        _, svdvals, vecs = linalg.svd(self.values, full_matrices=False)
-        self.vals_eigs = 2 * np.log(svdvals[:n_svd]) - np.log(len(values))
-        self.vals_vecs = vecs.T[:, :n_svd].copy()
+    def velocity(self, x, out=None):
+        """Compute the current velocity at a position in parameter space."""
+        return np.dot(self._cov, x, out=out)
 
-        _, svdvals, vecs = linalg.svd(self.grads, full_matrices=False)
-        self.grad_eigs = -2 * np.log(svdvals[:n_svd]) + np.log(len(grads))
-        self.grad_vecs = vecs.T[:, :n_svd].copy()
+    def random(self):
+        """Draw random value from QuadPotential."""
+        vals = np.random.normal(size=self._n).astype(self.dtype)
+        return scipy.linalg.solve_triangular(self._chol.T, vals, overwrite_b=True)
 
-        self.n_dim = n_dim
-        self.n_svd = n_svd
-        self.n_approx = n_approx
+    def energy(self, x, velocity=None):
+        """Compute kinetic energy at a position in parameter space."""
+        if velocity is None:
+            velocity = self.velocity(x)
+        return 0.5 * np.dot(x, velocity)
 
-        if n_svd < n_dim // 3:
-            center_slice = slice(n_svd // 3, None)
-        else:
-            center_slice = slice(2 * n_svd // 3, (2 * n_dim) // 3)
+    def velocity_energy(self, x, v_out):
+        """Compute velocity and return kinetic energy at a position in parameter space."""
+        self.velocity(x, out=v_out)
+        return self.energy(x, v_out)
 
-        self.center = 0.5 * (
-            self.grad_eigs[center_slice].mean() + self.vals_eigs[center_slice].mean()
+    __call__ = random
+
+
+class QuadPotentialFullAdapt(QuadPotentialFull):
+    """Adapt a dense mass matrix using the sample covariances."""
+
+    def __init__(
+        self,
+        n,
+        initial_mean,
+        initial_cov=None,
+        initial_weight=0,
+        adaptation_window=101,
+        adaptation_window_multiplier=2,
+        update_window=1,
+        dtype=None,
+    ):
+        if initial_cov is not None and initial_cov.ndim != 2:
+            raise ValueError("Initial covariance must be two-dimensional.")
+        if initial_mean.ndim != 1:
+            raise ValueError("Initial mean must be one-dimensional.")
+        if initial_cov is not None and initial_cov.shape != (n, n):
+            raise ValueError(
+                "Wrong shape for initial_cov: expected %s got %s"
+                % (n, initial_cov.shape)
+            )
+        if len(initial_mean) != n:
+            raise ValueError(
+                "Wrong shape for initial_mean: expected %s got %s"
+                % (n, len(initial_mean))
+            )
+
+        if dtype is None:
+            dtype = "float32"
+
+        if initial_cov is None:
+            initial_cov = np.eye(n, dtype=dtype)
+            initial_weight = 1
+
+        self.dtype = dtype
+        self._n = n
+        self._cov = np.array(initial_cov, dtype=self.dtype, copy=True)
+        self._chol = scipy.linalg.cholesky(self._cov, lower=True)
+        self._chol_error = None
+        self._foreground_cov = _WeightedCovariance(
+            self._n, initial_mean, initial_cov, initial_weight, self.dtype
         )
+        self._background_cov = _WeightedCovariance(self._n, dtype=self.dtype)
+        self._n_samples = 0
 
-        self.vals_eigs -= self.center
-        self.grad_eigs -= self.center
+        self._adaptation_window = int(adaptation_window)
+        self._adaptation_window_multiplier = float(adaptation_window_multiplier)
+        self._update_window = int(update_window)
+        self._previous_update = 0
 
-        weight = stats.beta(0.5, 0.5).cdf(np.linspace(0, 1, n_dim))
-        self.weight = 1 - weight[:n_svd]
+    def _update_from_weightvar(self, weightvar):
+        weightvar.current_covariance(out=self._cov)
+        try:
+            self._chol = scipy.linalg.cholesky(self._cov, lower=True)
+        except (scipy.linalg.LinAlgError, ValueError) as error:
+            self._chol_error = error
 
-        self._make_operators(n_approx)
+    def update(self, sample, grad, tune):
+        """Inform the potential about a new sample during tuning."""
+        if not tune:
+            return
 
-    def to_dense(self):
-        vecs, eigs = self.vals_vecs, self.vals_eigs
-        A = (vecs * eigs * self.weight) @ vecs.T
+        # Steps since previous update
+        delta = self._n_samples - self._previous_update
 
-        vecs, eigs = self.grad_vecs, self.grad_eigs
-        B = (vecs * eigs * self.weight) @ vecs.T
+        self._foreground_cov.add_sample(sample, weight=1)
+        self._background_cov.add_sample(sample, weight=1)
 
-        corr = np.exp(self.center) * linalg.expm(A + B)
-        corr *= self.diag[:, None]
-        corr *= self.diag[None, :]
-        return corr
+        # Update the covariance matrix and recompute the Cholesky factorization
+        # every "update_window" steps
+        if (delta + 1) % self._update_window == 0:
+            self._update_from_weightvar(self._foreground_cov)
 
-    def invsqrt_to_dense(self):
-        assert False  # TODO This is wrong
-        vecs, eigs = self.vals_vecs, self.vals_eigs
-        A = (vecs * eigs * self.weight) @ vecs.T
+        # Reset the background covariance if we are at the end of the adaptation
+        # window.
+        if delta >= self._adaptation_window:
+            self._foreground_cov = self._background_cov
+            self._background_cov = _WeightedCovariance(self._n, dtype=self.dtype)
 
-        vecs, eigs = self.grad_vecs, self.grad_eigs
-        B = (vecs * eigs * self.weight) @ vecs.T
+            self._previous_update = self._n_samples
+            self._adaptation_window = int(
+                self._adaptation_window * self._adaptation_window_multiplier
+            )
 
-        corr = np.exp(-0.5 * self.center) * linalg.expm(-0.5 * (A + B))
-        corr *= self.invsqrtdiag[:, None]
-        corr *= self.invsqrtdiag[None, :]
-        return corr
+        self._n_samples += 1
 
-    def matmul(self, x, out=None):
-        if out is None:
-            out = np.empty_like(x)
+    def raise_ok(self, vmap):
+        """Check if the mass matrix is ok, and raise ValueError if not."""
+        if self._chol_error is not None:
+            raise ValueError("{0}".format(self._chol_error))
 
-        self._matmul(x * self.diag, out)
-        out *= self.diag
-        return out
 
-    def invsqrtmul(self, x, out=None):
-        if out is None:
-            out = np.empty_like(x)
-        self._matmul_invsqrt(x, out)
-        return out / self.diag
+class _WeightedCovariance:
+    """Online algorithm for computing mean and covariance.
 
-    def _make_operators(self, n_eigs, exponent=1):
-        vecs1, eigs1 = self.vals_vecs, self.vals_eigs
-        vecs2, eigs2 = self.grad_vecs, self.grad_eigs
-        vecs1 = np.ascontiguousarray(vecs1)
-        vecs2 = np.ascontiguousarray(vecs2)
+    This implements the `Welford's algorithm
+    <https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance>`_ based
+    on the implementation in `the Stan math library
+    <https://github.com/stan-dev/math>`_.
+    """
 
-        def upper_matmul(x):
-            out = np.empty_like(x)
-            work = np.empty(len(eigs1))
-            add_ADATv(vecs1, x, out, diag=eigs1 * self.weight, beta=0.0, work=work)
-            add_ADATv(vecs2, x, out, diag=eigs2 * self.weight, beta=1.0, work=work)
-            return out
+    def __init__(
+        self,
+        nelem,
+        initial_mean=None,
+        initial_covariance=None,
+        initial_weight=0,
+        dtype="d",
+    ):
+        self._dtype = dtype
+        self.n_samples = float(initial_weight)
+        if initial_mean is None:
+            self.mean = np.zeros(nelem, dtype="d")
+        else:
+            self.mean = np.array(initial_mean, dtype="d", copy=True)
+        if initial_covariance is None:
+            self.raw_cov = np.eye(nelem, dtype="d")
+        else:
+            self.raw_cov = np.array(initial_covariance, dtype="d", copy=True)
 
-        upper = slinalg.LinearOperator((self.n_dim, self.n_dim), upper_matmul)
-        eigs, vecs = slinalg.eigsh(upper, k=n_eigs, mode="buckling")
-        self._matrix_logeigs = eigs
-        eigs_exp = np.exp(eigs)
-        eigs_invsqrtexp = np.exp(-0.5 * eigs)
+        self.raw_cov[:] *= self.n_samples
 
-        def matmul_exp(x, out):
-            work = np.empty(len(eigs))
-            add_ADATv(vecs, x, out, diag=None, beta=0.0, work=work)
-            add_ADATv(vecs, x, out, diag=eigs_exp, beta=-1.0, work=work)
-            out += x
-            out *= np.exp(self.center)
+        if self.raw_cov.shape != (nelem, nelem):
+            raise ValueError("Invalid shape for initial covariance.")
+        if self.mean.shape != (nelem,):
+            raise ValueError("Invalid shape for initial mean.")
 
-        def matmul_invsqrtexp(x, out):
-            work = np.empty(len(eigs))
-            add_ADATv(vecs, x, out, diag=None, beta=0.0, work=work)
-            add_ADATv(vecs, x, out, diag=eigs_invsqrtexp, beta=-1.0, work=work)
-            out += x
-            out *= np.exp(-0.5 * self.center)
+    def add_sample(self, x, weight):
+        x = np.asarray(x)
+        self.n_samples += 1
+        old_diff = x - self.mean
+        self.mean[:] += old_diff / self.n_samples
+        new_diff = x - self.mean
+        self.raw_cov[:] += weight * new_diff[:, None] * old_diff[None, :]
 
-        self._matmul = matmul_exp
-        self._matmul_invsqrt = matmul_invsqrtexp
+    def current_covariance(self, out=None):
+        if self.n_samples == 0:
+            raise ValueError("Can not compute covariance without samples.")
+        if out is not None:
+            return np.divide(self.raw_cov, self.n_samples - 1, out=out)
+        else:
+            return (self.raw_cov / (self.n_samples - 1)).astype(self._dtype)
+
+    def current_mean(self):
+        return np.array(self.mean, dtype=self._dtype)
 
 
 class QuadPotentialLowRank(object):
@@ -598,6 +691,6 @@ class QuadPotentialLowRank(object):
         if self._cov is not None:
             self._old_covs.append(self._cov)
         n_svd = min(self._ndim - 5, n_samples - 5)
-        self._cov = Covariance(
+        self._cov = _WeightedVariance(
             self._ndim, n_svd, n_approx, samples, grads, diag=self._diag
         )
