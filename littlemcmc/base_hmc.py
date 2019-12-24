@@ -80,7 +80,6 @@ class BaseHMC:
         t0 : int, default 10
             Parameter for dual averaging. Higher values slow initial adaptation.
         step_rand : Python callable
-            # FIXME rename this to callback or something
             Called on step size to randomize, immediately before adapting step
             size.
         """
@@ -91,7 +90,6 @@ class BaseHMC:
         self.size = size
         self.step_size = step_scale / (size ** 0.25)
         self.target_accept = target_accept
-        # FIXME: find a better name that step_adapt
         self.step_adapt = step_sizes.DualAverageAdaptation(
             self.step_size, target_accept, gamma, k, t0
         )
@@ -153,8 +151,6 @@ class BaseHMC:
         start = self.integrator.compute_state(q0, p0)
 
         if not np.isfinite(start.energy):
-            # FIXME need to reimplement raise_ok from scratch.
-            # self.potential.raise_ok(self._logp_dlogp_func._ordering.vmap)
             raise ValueError(
                 "Bad initial energy: {}. The model might be misspecified.".format(
                     start.energy
@@ -183,12 +179,9 @@ class BaseHMC:
             else:
                 kind = WarningType.DIVERGENCE
                 self._num_divs_sample += 1
-                # We don't want to fill up all memory with divergence info
-                if self._num_divs_sample < 100:
-                    # FIXME what to do about array_to_dict?
-                    point = self._logp_dlogp_func.array_to_dict(info.state.q)
-                else:
-                    point = None
+                # We don't want to fill up all memory, so do not return points
+                # with divergence info
+                point = None
             warning = SamplerWarning(
                 kind, info.message, "debug", self.iter_count, info.exec_info, point
             )

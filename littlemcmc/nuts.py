@@ -164,7 +164,6 @@ class NUTS(BaseHMC):
         t0 : int, default 10
             Parameter for dual averaging. Higher values slow initial adaptation.
         step_rand : Python callable
-            # FIXME rename this to callback or something
             Called on step size to randomize, immediately before adapting step
             size.
         path_length : float, default=2
