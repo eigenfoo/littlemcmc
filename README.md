@@ -8,7 +8,7 @@
 > littlemcmc &nbsp; &nbsp; /lɪtəl ɛm si ɛm si/ &nbsp; &nbsp; _noun_
 >
 > A lightweight and performant implementation of HMC and NUTS in Python, spun
-> out of [the PyMC4 project](https://github.com/pymc-devs). Not to be confused
+> out of [the PyMC project](https://github.com/pymc-devs). Not to be confused
 > with [minimc](https://github.com/ColCarroll/minimc).
 
 ## License
