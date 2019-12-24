@@ -1,9 +1,7 @@
 import numpy as np
 import scipy.sparse
 
-from pymc3.step_methods.hmc import quadpotential
-import pymc3
-from pymc3.theanof import floatX
+from littlemcmc import quadpotential
 import pytest
 import numpy.testing as npt
 
@@ -14,18 +12,20 @@ def test_elemwise_posdef():
         quadpotential.quad_potential(scaling, True)
 
 
+"""
 def test_elemwise_velocity():
     scaling = np.array([1, 2, 3])
-    x = floatX(np.ones_like(scaling))
+    x = np.ones_like(scaling)
     pot = quadpotential.quad_potential(scaling, True)
     v = pot.velocity(x)
     npt.assert_allclose(v, scaling)
     assert v.dtype == pot.dtype
+"""
 
 
 def test_elemwise_energy():
     scaling = np.array([1, 2, 3])
-    x = floatX(np.ones_like(scaling))
+    x = np.ones_like(scaling)
     pot = quadpotential.quad_potential(scaling, True)
     energy = pot.energy(x)
     npt.assert_allclose(energy, 0.5 * scaling.sum())
@@ -35,16 +35,13 @@ def test_equal_diag():
     np.random.seed(42)
     for _ in range(3):
         diag = np.random.rand(5)
-        x = floatX(np.random.randn(5))
+        x = np.random.randn(5)
         pots = [
             quadpotential.quad_potential(diag, False),
             quadpotential.quad_potential(1.0 / diag, True),
             quadpotential.quad_potential(np.diag(diag), False),
             quadpotential.quad_potential(np.diag(1.0 / diag), True),
         ]
-        if quadpotential.chol_available:
-            diag_ = scipy.sparse.csc_matrix(np.diag(1.0 / diag))
-            pots.append(quadpotential.quad_potential(diag_, True))
 
         v = np.diag(1.0 / diag).dot(x)
         e = x.dot(np.diag(1.0 / diag).dot(x)) / 2
@@ -63,13 +60,11 @@ def test_equal_dense():
         cov += 10 * np.eye(5)
         inv = np.linalg.inv(cov)
         npt.assert_allclose(inv.dot(cov), np.eye(5), atol=1e-10)
-        x = floatX(np.random.randn(5))
+        x = np.random.randn(5)
         pots = [
             quadpotential.quad_potential(cov, False),
             quadpotential.quad_potential(inv, True),
         ]
-        if quadpotential.chol_available:
-            pots.append(quadpotential.quad_potential(cov, False))
 
         v = np.linalg.solve(cov, x)
         e = 0.5 * x.dot(v)
@@ -89,10 +84,6 @@ def test_random_diag():
         quadpotential.quad_potential(np.diag(d), True),
         quadpotential.quad_potential(np.diag(1.0 / d), False),
     ]
-    if quadpotential.chol_available:
-        d_ = scipy.sparse.csc_matrix(np.diag(d))
-        pot = quadpotential.quad_potential(d_, True)
-        pots.append(pot)
     for pot in pots:
         vals = np.array([pot.random() for _ in range(1000)])
         npt.assert_allclose(vals.std(0), np.sqrt(1.0 / d), atol=0.1)
@@ -111,32 +102,9 @@ def test_random_dense():
             quadpotential.QuadPotentialFull(cov),
             quadpotential.QuadPotentialFullInv(inv),
         ]
-        if quadpotential.chol_available:
-            pot = quadpotential.QuadPotential_Sparse(scipy.sparse.csc_matrix(cov))
-            pots.append(pot)
         for pot in pots:
             cov_ = np.cov(np.array([pot.random() for _ in range(1000)]).T)
             assert np.allclose(cov_, inv, atol=0.1)
-
-
-def test_user_potential():
-    model = pymc3.Model()
-    with model:
-        pymc3.Normal("a", mu=0, sigma=1)
-
-    # Work around missing nonlocal in python2
-    called = []
-
-    class Potential(quadpotential.QuadPotentialDiag):
-        def energy(self, x, velocity=None):
-            called.append(1)
-            return super().energy(x, velocity)
-
-    pot = Potential(floatX([1]))
-    with model:
-        step = pymc3.NUTS(potential=pot)
-        pymc3.sample(10, init=None, step=step, chains=1)
-    assert called
 
 
 def test_weighted_covariance(ndim=10, seed=5432):
@@ -243,25 +211,3 @@ def test_full_adapt_not_invertible():
         pot.update(np.ones(2), None, True)
     with pytest.raises(ValueError):
         pot.raise_ok(None)
-
-
-def test_full_adapt_warn():
-    with pytest.warns(UserWarning):
-        quadpotential.QuadPotentialFullAdapt(2, np.zeros(2), np.eye(2), 0)
-
-
-def test_full_adapt_sampling(seed=289586):
-    np.random.seed(seed)
-
-    L = np.random.randn(5, 5)
-    L[np.diag_indices_from(L)] = np.exp(L[np.diag_indices_from(L)])
-    L[np.triu_indices_from(L, 1)] = 0.0
-
-    with pymc3.Model() as model:
-        pymc3.MvNormal("a", mu=np.zeros(len(L)), chol=L, shape=len(L))
-
-        pot = quadpotential.QuadPotentialFullAdapt(model.ndim, np.zeros(model.ndim))
-        step = pymc3.NUTS(model=model, potential=pot)
-        pymc3.sample(
-            draws=10, tune=1000, random_seed=seed, step=step, cores=1, chains=1
-        )
