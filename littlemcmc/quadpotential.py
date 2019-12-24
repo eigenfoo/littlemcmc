@@ -28,7 +28,6 @@ __all__ = [
     "QuadPotentialDiagAdapt",
     "QuadPotentialFullAdapt",
     "isquadpotential",
-    "QuadPotentialLowRank",
 ]
 
 
@@ -615,82 +614,3 @@ class _WeightedCovariance:
 
     def current_mean(self):
         return np.array(self.mean, dtype=self._dtype)
-
-
-class QuadPotentialLowRank(object):
-    """Quad potential using a low-rank covariance matrix."""
-
-    def __init__(self, ndim, n_approx, diag):
-        self._cov = None
-        self._iter = 0
-        self._ndim = ndim
-        self._n_approx = n_approx
-        self._diag = diag
-        self._old_covs = []
-
-        self._grad_store = []
-        self._sample_store = []
-        self.dtype = "float64"
-
-    def velocity(self, x, out=None):
-        """Compute the current velocity at a position in parameter space."""
-        if self._cov is None:
-            if out is None:
-                out = np.empty_like(x)
-            out[:] = x
-            return out
-
-        return self._cov.matmul(x, out=out)
-
-    def energy(self, x, velocity=None):
-        """Compute kinetic energy at a position in parameter space."""
-        if velocity is None:
-            velocity = self.velocity(x)
-        return 0.5 * x.dot(velocity)
-
-    def random(self):
-        """Draw random value from QuadPotential."""
-        rand = np.random.randn(self._ndim)
-        if self._cov is None:
-            return rand
-        return self._cov.invsqrtmul(rand)
-
-    def velocity_energy(self, x, v_out):
-        """Compute velocity and return kinetic energy at a position in parameter space."""
-        self.velocity(x, out=v_out)
-        return 0.5 * np.dot(x, v_out)
-
-    def raise_ok(self, *args, **kwargs):
-        """Check if the mass matrix is ok, and raise ValueError if not."""
-        pass
-
-    def update(self, sample, grad, tune):
-        """Inform the potential about a new sample during tuning."""
-        self._iter += 1
-        if not tune:
-            return
-
-        if self._iter < 50:
-            return
-
-        renew_iters = [120, 240, 400, 850]
-        if self._iter not in renew_iters:
-            self._grad_store.append(grad.copy())
-            self._sample_store.append(sample.copy())
-            return
-
-        n_samples = len(self._grad_store)
-        samples = np.array(self._sample_store)
-        grads = np.array(self._grad_store)
-        self._sample_store.clear()
-        self._grad_store.clear()
-        if self._iter <= 160:
-            n_approx = 4
-        else:
-            n_approx = self._n_approx
-        if self._cov is not None:
-            self._old_covs.append(self._cov)
-        n_svd = min(self._ndim - 5, n_samples - 5)
-        self._cov = _WeightedVariance(
-            self._ndim, n_svd, n_approx, samples, grads, diag=self._diag
-        )
