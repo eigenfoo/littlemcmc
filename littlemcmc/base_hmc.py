@@ -126,16 +126,13 @@ class BaseHMC:
         Parameters
         ----------
         array : array-like
-            TODO: document this!
+            Current position.
         """
-        # FIXME where does generates_stats come from?
         if self.generates_stats:
             apoint, stats = self._astep(array)
-            # point = self._logp_dlogp_func.array_to_full_dict(apoint)
             return apoint, stats
         else:
             apoint = self._astep(array)
-            # point = self._logp_dlogp_func.array_to_full_dict(apoint)
             return apoint
 
     def stop_tuning(self):
@@ -147,24 +144,11 @@ class BaseHMC:
         """Compute one Hamiltonian trajectory and return the next state.
 
         Subclasses must overwrite this method and return a `HMCStepData`.
-
-        Parameters
-        ----------
-        start
-        p0
-        step_size
-            TODO: document these!
         """
         raise NotImplementedError("Abstract method")
 
     def _astep(self, q0):
-        """Perform a single HMC iteration.
-
-        Parameters
-        ----------
-        q0
-            TODO: document these!
-        """
+        """Perform a single HMC iteration."""
         p0 = self.potential.random()
         start = self.integrator.compute_state(q0, p0)
 
