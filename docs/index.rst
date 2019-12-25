@@ -32,5 +32,6 @@ LittleMCMC
    :maxdepth: 2
    :caption: Contents
 
+   tutorials/quickstart
    api
 
