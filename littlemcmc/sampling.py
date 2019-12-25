@@ -19,6 +19,7 @@ from collections.abc import Iterable
 import logging
 from joblib import Parallel, delayed
 import numpy as np
+from tqdm import tqdm, tqdm_notebook
 
 _log = logging.getLogger("littlemcmc")
 
@@ -32,6 +33,8 @@ def _sample_one_chain(
     init=None,
     random_seed=None,
     discard_tuned_samples=True,
+    progressbar=True,
+    progressbar_position=None,
 ):
     """Sample one chain in one process."""
     if random_seed is not None:
@@ -42,10 +45,20 @@ def _sample_one_chain(
     else:
         q = np.zeros(size)
 
+    if progressbar_position is None:
+        progressbar_position = 0
+
     trace = np.zeros([size, tune + draws])
     stats = []
 
-    for i in range(tune + draws):
+    if progressbar or progressbar == "console":
+        iterator = tqdm(range(tune + draws), position=progressbar_position)
+    elif progressbar == "notebook":
+        iterator = tqdm_notebook(range(tune + draws), position=progressbar_position)
+    else:
+        iterator = range(tune + draws)
+
+    for i in iterator:
         q, step_stats = stepper._astep(q)
         trace[:, i] = q
         stats.extend(step_stats)
@@ -103,10 +116,11 @@ def sample(
             draws=draws,
             tune=tune,
             init=init,
-            random_seed=i,
+            random_seed=seed,
             discard_tuned_samples=discard_tuned_samples,
+            progressbar_position=i,
         )
-        for i in random_seed
+        for i, seed in enumerate(random_seed)
     )
 
     trace = np.hstack([chain_trace for (chain_trace, _) in results])
