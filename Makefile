@@ -8,7 +8,6 @@ SHELL := bash
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
 .DELETE_ON_ERROR:
-MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
 .PHONY: help
@@ -83,3 +82,4 @@ clean:  # Clean project directories.
 	find littlemcmc/ tests/ -type d -name "__pycache__" -exec rm -rf {} +
 	find littlemcmc/ tests/ -type d -name "__pycache__" -delete
 	find littlemcmc/ tests/ -type f -name "*.pyc" -delete
+	${MAKE} -C docs/ clean
