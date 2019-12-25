@@ -27,7 +27,6 @@ __all__ = [
     "QuadPotentialFullInv",
     "QuadPotentialDiagAdapt",
     "QuadPotentialFullAdapt",
-    "isquadpotential",
 ]
 
 
