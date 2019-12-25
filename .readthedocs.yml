@@ -22,4 +22,4 @@ python:
     - method: pip
       path: .
     - method: setuptools
-      path: littlemcmc/
+      path: .
