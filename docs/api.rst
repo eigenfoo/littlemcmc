@@ -5,6 +5,16 @@
 API Reference
 =============
 
+.. _sampling_api:
+
+Sampling
+--------
+
+.. autosummary::
+    :toctree: generated/
+
+    sample
+
 .. _step_methods_api:
 
 Step Methods
@@ -15,3 +25,17 @@ Step Methods
 
     HamiltonianMC
     NUTS
+
+Quadpotentials (a.k.a. Mass Matrices)
+-------------------------------------
+
+.. autosummary::
+    :toctree: generated/
+
+    quad_potential
+    QuadPotentialDiag
+    QuadPotentialFull
+    QuadPotentialFullInv
+    QuadPotentialDiagAdapt
+    QuadPotentialFullAdapt
+

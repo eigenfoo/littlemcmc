@@ -44,7 +44,7 @@ templates_path = ["_templates"]
 
 # By default, Sphinx expects the master doc to be `contents`. Instead, set it to
 # `index`.
-master_doc = 'index'
+master_doc = "index"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
