@@ -46,6 +46,18 @@ def test_nuts_sampling_runs():
     assert len(stats) == 1
 
 
+def test_multiprocess_sampling_runs():
+    size = 1
+    stepper = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
+    draws = 1
+    tune = 1
+    chains = None
+    cores = None
+    trace, stats = lmc.sample(
+        logp_dlogp_func, size, stepper, draws, tune, chains=chains, cores=cores
+    )
+
+
 def test_hmc_recovers_1d_normal():
     size = 1
     stepper = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size)
