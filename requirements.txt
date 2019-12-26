@@ -1,5 +1,4 @@
-joblib
+joblib>=0.14.1
 numpy
 scipy>=0.18.1
-theano
 tqdm
