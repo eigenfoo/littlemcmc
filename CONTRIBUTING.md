@@ -2,8 +2,11 @@
 
 ![Python versions](https://img.shields.io/badge/python-3.6%7C3.7-blue)
 ![Code style](https://img.shields.io/badge/style-black-black)
-![GitHub issues](https://img.shields.io/github/issues/eigenfoo/littlemcmc)]
+![GitHub issues](https://img.shields.io/github/issues/eigenfoo/littlemcmc)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/eigenfoo/littlemcmc)
+
+> This guide was derived from the [PyMC3 contributing
+> guide](https://github.com/pymc-devs/pymc3/blob/master/CONTRIBUTING.md).
 
 As a scientific community-driven software project, LittleMCMC welcomes
 contributions from interested individuals or groups. These guidelines are
@@ -110,7 +113,7 @@ machine, and develop on a feature branch.
    'Pull request' button to send your changes to the project's maintainers for
    review. This will notify the developers.
 
-## Pull request checklist
+### Pull request checklist
 
 We recommended that your contribution complies with the following guidelines
 before you submit a pull request:
@@ -150,6 +153,7 @@ You can also run the test suite with the following Make rule:
   $ make test
   ```
 
-**This guide was derived from the [PyMC3 contributing
-guide](https://github.com/pymc-devs/pymc3/blob/master/CONTRIBUTING.md).**
+## Code of Conduct
 
+LittleMCMC abides by the [Contributor Covenant Code of Conduct, version
+1.4](https://github.com/eigenfoo/littlemcmc/blob/master/CODE_OF_CONDUCT.md).
