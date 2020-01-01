@@ -16,28 +16,30 @@
 
 import os
 from collections.abc import Iterable
+from typing import Callable, Tuple, Optional, Union, List
 import logging
 from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm, tqdm_notebook
 from .nuts import NUTS
 from .quadpotential import QuadPotentialDiagAdapt
+from .report import SamplerWarning
 
 _log = logging.getLogger("littlemcmc")
 
 
 def _sample_one_chain(
-    logp_dlogp_func,
-    size,
-    draws,
-    tune,
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    size: int,
+    draws: int,
+    tune: int,
     step=None,
-    init="auto",
-    start=None,
-    random_seed=None,
-    discard_tuned_samples=True,
-    progressbar=True,
-    progressbar_position=None,
+    init: str = "auto",
+    start: Optional[np.ndarray] = None,
+    random_seed: Union[None, int, List[int]] = None,
+    discard_tuned_samples: bool = True,
+    progressbar: bool = True,
+    progressbar_position: Optional[int] = None,
     **kwargs,
 ):
     """Sample one chain in one process."""
@@ -64,7 +66,7 @@ def _sample_one_chain(
         progressbar_position = 0
 
     trace = np.zeros([size, tune + draws])
-    stats = []
+    stats: List[SamplerWarning] = []
 
     if progressbar or progressbar == "console":
         iterator = tqdm(range(tune + draws), position=progressbar_position)
@@ -78,9 +80,7 @@ def _sample_one_chain(
         trace[:, i] = q
         stats.extend(step_stats)
         if i == tune - 1:  # Draws are 0-indexed, not 1-indexed
-            assert step.tune
             step.stop_tuning()
-            assert not step.tune
 
     if discard_tuned_samples:
         trace = trace[:, tune:]
@@ -90,16 +90,16 @@ def _sample_one_chain(
 
 
 def sample(
-    logp_dlogp_func,
-    size,
-    draws,
-    tune,
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    size: int,
+    draws: int,
+    tune: int,
     step=None,
-    chains=None,
-    cores=None,
-    start=None,
-    random_seed=None,
-    discard_tuned_samples=True,
+    chains: Optional[int] = None,
+    cores: Optional[int] = None,
+    start: Optional[np.ndarray] = None,
+    random_seed: Optional[Union[int, List[int]]] = None,
+    discard_tuned_samples: bool = True,
 ):
     """Sample."""
     if cores is None:
@@ -110,7 +110,7 @@ def sample(
     if random_seed is None or isinstance(random_seed, int):
         if random_seed is not None:
             np.random.seed(random_seed)
-        random_seed = [np.random.randint(2 ** 30) for _ in range(chains)]
+        random_seed = [np.random.randint(2 ** 30) for _ in range(chains)]  # type: ignore
     elif isinstance(random_seed, Iterable) and len(random_seed) != chains:
         random_seed = random_seed[:chains]
     elif not isinstance(random_seed, Iterable):
@@ -147,7 +147,11 @@ def sample(
 
 
 def init_nuts(
-    logp_dlogp_func, size, init="auto", random_seed=None, **kwargs,
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    size: int,
+    init: str = "auto",
+    random_seed: Union[None, int, List[int]] = None,
+    **kwargs,
 ):
     """Set up the mass matrix initialization for NUTS.
 

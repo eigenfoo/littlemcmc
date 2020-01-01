@@ -17,7 +17,7 @@
 from __future__ import division
 
 from collections import namedtuple
-from typing import Callable, Tuple, Optional
+from typing import Callable, Tuple, List, Optional
 
 import numpy as np
 import numpy.random as nr
@@ -29,7 +29,7 @@ from .report import SamplerWarning, WarningType
 __all__ = ["NUTS"]
 
 
-def logbern(log_p):
+def logbern(log_p: float) -> bool:
     if np.isnan(log_p):
         raise FloatingPointError("log_p can't be nan.")
     return np.log(nr.uniform()) < log_p
@@ -202,7 +202,9 @@ class NUTS(BaseHMC):
         self.path_length = path_length
         self._reached_max_treedepth = 0
 
-    def _hamiltonian_step(self, start, p0, step_size):
+    def _hamiltonian_step(
+        self, start: np.ndarray, p0: np.ndarray, step_size: float
+    ) -> HMCStepData:
         if self.tune and self.iter_count < 200:
             max_treedepth = self.early_max_treedepth
         else:
@@ -224,7 +226,7 @@ class NUTS(BaseHMC):
         accept_stat = stats["mean_tree_accept"]
         return HMCStepData(tree.proposal, accept_stat, divergence_info, stats)
 
-    def warnings(self):
+    def warnings(self) -> List[SamplerWarning]:
         """Generate warnings from NUTS sampler."""
         warnings = super(NUTS, self).warnings()
         n_samples = self._samples_after_tune
