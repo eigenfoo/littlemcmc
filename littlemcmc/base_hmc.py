@@ -19,7 +19,7 @@ from typing import Callable, Tuple, List, Optional
 import numpy as np
 
 from . import integration, step_sizes
-from .quadpotential import quad_potential, QuadPotentialDiagAdapt
+from .quadpotential import quad_potential, QuadPotential, QuadPotentialDiagAdapt
 from .report import SamplerWarning, WarningType
 
 HMCStepData = namedtuple("HMCStepData", "end, accept_stat, divergence_info, stats")
@@ -35,7 +35,7 @@ class BaseHMC:
         size: int,
         scaling: Optional[np.ndarray],
         is_cov: bool,
-        potential,
+        potential: QuadPotential,
         target_accept: float,
         Emax: float,
         adapt_step_size: bool,

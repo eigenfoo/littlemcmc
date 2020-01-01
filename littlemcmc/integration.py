@@ -15,7 +15,11 @@
 """Leapfrog integrators."""
 
 from collections import namedtuple
+from typing import Callable, Tuple
+
+import numpy as np
 from scipy import linalg
+from .quadpotential import QuadPotential
 
 
 State = namedtuple("State", "q, p, v, q_grad, energy, model_logp")
@@ -30,7 +34,11 @@ class IntegrationError(RuntimeError):
 class CpuLeapfrogIntegrator(object):
     """Leapfrog integrator using the CPU."""
 
-    def __init__(self, potential, logp_dlogp_func):
+    def __init__(
+        self,
+        potential: QuadPotential,
+        logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    ) -> None:
         """Instantiate a CPU leapfrog integrator.
 
         Parameters
@@ -41,7 +49,7 @@ class CpuLeapfrogIntegrator(object):
         self._potential = potential
         self._logp_dlogp_func = logp_dlogp_func
 
-    def compute_state(self, q, p):
+    def compute_state(self, q: np.ndarray, p: np.ndarray) -> State:
         """Compute Hamiltonian functions using a position and momentum.
 
         Parameters
@@ -57,7 +65,7 @@ class CpuLeapfrogIntegrator(object):
         energy = kinetic - logp
         return State(q, p, v, dlogp, energy, logp)
 
-    def step(self, epsilon, state, out=None):
+    def step(self, epsilon, state: State, out=None):
         """Leapfrog integrator step.
 
         Half a momentum update, full position update, half momentum update.
@@ -89,7 +97,7 @@ class CpuLeapfrogIntegrator(object):
             else:
                 raise
 
-    def _step(self, epsilon, state):
+    def _step(self, epsilon, state: State) -> State:
         """Perform one leapfrog step."""
         pot = self._potential
         q, p, v, q_grad, energy, logp = state
