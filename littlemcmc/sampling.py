@@ -29,23 +29,34 @@ _log = logging.getLogger("littlemcmc")
 def _sample_one_chain(
     logp_dlogp_func,
     size,
-    stepper,
+    step,
     draws,
     tune,
-    init=None,
+    init="auto",
+    start=None,
     random_seed=None,
     discard_tuned_samples=True,
     progressbar=True,
     progressbar_position=None,
+    **kwargs,
 ):
     """Sample one chain in one process."""
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    if init is not None:
-        q = init
+    start_, step = init_nuts(
+        logp_dlogp_func=logp_dlogp_func,
+        size=size,
+        init=init,
+        n_init=500,
+        random_seed=random_seed,
+        **kwargs,
+    )
+
+    if start is not None:
+        q = start
     else:
-        q = np.zeros(size)
+        q = start_
 
     if progressbar_position is None:
         progressbar_position = 0
@@ -61,11 +72,11 @@ def _sample_one_chain(
         iterator = range(tune + draws)
 
     for i in iterator:
-        q, step_stats = stepper._astep(q)
+        q, step_stats = step._astep(q)
         trace[:, i] = q
         stats.extend(step_stats)
         if i == tune:
-            stepper.stop_tuning()
+            step.stop_tuning()
 
     if discard_tuned_samples:
         trace = trace[:, tune:]
@@ -77,12 +88,12 @@ def _sample_one_chain(
 def sample(
     logp_dlogp_func,
     size,
-    stepper,
+    step,
     draws,
     tune,
     chains=None,
     cores=None,
-    init=None,
+    start=None,
     random_seed=None,
     discard_tuned_samples=True,
 ):
@@ -114,10 +125,10 @@ def sample(
         delayed(_sample_one_chain)(
             logp_dlogp_func=logp_dlogp_func,
             size=size,
-            stepper=stepper,
+            step=step,
             draws=draws,
             tune=tune,
-            init=init,
+            start=start,
             random_seed=seed,
             discard_tuned_samples=discard_tuned_samples,
             progressbar_position=i,
