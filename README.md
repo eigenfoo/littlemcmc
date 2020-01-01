@@ -1,4 +1,4 @@
-# LittleMCMC
+# LittleMCMC (Pre-release)
 
 ![Tests Status](https://github.com/eigenfoo/littlemcmc/workflows/tests/badge.svg)
 ![Lint Status](https://github.com/eigenfoo/littlemcmc/workflows/lint/badge.svg)
