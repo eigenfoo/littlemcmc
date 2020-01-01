@@ -20,14 +20,9 @@ from test_utils import logp_dlogp_func
 def test_init_nuts():
     size = 1
     init = "auto"
-    chains = 1
     random_seed = 42
     foo = lmc.init_nuts(
-        logp_dlogp_func=logp_dlogp_func,
-        size=size,
-        init=init,
-        chains=chains,
-        random_seed=random_seed,
+        logp_dlogp_func=logp_dlogp_func, size=size, init=init, random_seed=random_seed,
     )
 
 

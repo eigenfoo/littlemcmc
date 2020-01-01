@@ -21,6 +21,7 @@ from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm, tqdm_notebook
 from .nuts import NUTS
+from .quadpotential import QuadPotentialDiagAdapt, QuadPotentialFull
 
 _log = logging.getLogger("littlemcmc")
 
@@ -131,7 +132,7 @@ def sample(
 
 
 def init_nuts(
-    init="auto", chains=1, n_init=500, random_seed=None, **kwargs,
+    logp_dlogp_func, size, init="auto", n_init=500, random_seed=None, **kwargs,
 ):
     """Set up the mass matrix initialization for NUTS.
 
@@ -148,26 +149,24 @@ def init_nuts(
           future. If you depend on the exact behaviour, choose an initialization
           method explicitly.
         * adapt_diag : Start with a identity mass matrix and then adapt a
-          diagonal based on the variance of the tuning samples.  All chains use
-          the test value (usually the prior mean) as starting point.
-        * jitter+adapt_diag : Same as ``adapt_diag``, but use uniform jitter in
+          diagonal based on the variance of the tuning samples. Uses the test
+          value (usually the prior mean) as starting point.
+        * jitter+adapt_diag : Same as `'adapt_diag'`, but use uniform jitter in
           [-1, 1] as starting point in each chain.
         * nuts : Run NUTS and estimate posterior mean and mass matrix from the
           trace.
-    chains: int
-        Number of jobs to start.
     n_init: int
         Number of iterations of initializer. If using `'nuts'`, this is the
         number of draws.
     **kwargs: keyword arguments
-        Extra keyword arguments are forwarded to pymc3.NUTS.
+        Extra keyword arguments are forwarded to littlemcmc.NUTS.
 
     Returns
     -------
-    start: pymc3.model.Point
-        Starting point for sampler
+    start: np.array
+        Starting point for sampler.
     nuts_sampler: pymc3.step_methods.NUTS
-        Instantiated and initialized NUTS sampler object
+        Instantiated and initialized NUTS sampler object.
     """
     if not isinstance(init, str):
         raise TypeError("init must be a string.")
@@ -184,32 +183,29 @@ def init_nuts(
         random_seed = int(np.atleast_1d(random_seed)[0])
         np.random.seed(random_seed)
 
-    # FIXME how does model.test_point get assigned? Is it zero-init with jitter?
     if init == "adapt_diag":
-        start = [model.test_point] * chains
-        mean = np.mean([model.dict_to_array(vals) for vals in start], axis=0)
-        var = np.ones_like(mean)
-        potential = quadpotential.QuadPotentialDiagAdapt(model.ndim, mean, var, 10)
+        start = np.zeros(size)
+        mean = start
+        var = np.ones(size)
+        potential = QuadPotentialDiagAdapt(size, mean, var, 10)
     elif init == "jitter+adapt_diag":
-        start = []
-        for _ in range(chains):
-            mean = {var: val.copy() for var, val in model.test_point.items()}
-            for val in mean.values():
-                val[...] += 2 * np.random.rand(*val.shape) - 1
-            start.append(mean)
-        mean = np.mean([model.dict_to_array(vals) for vals in start], axis=0)
-        var = np.ones_like(mean)
-        potential = quadpotential.QuadPotentialDiagAdapt(model.ndim, mean, var, 10)
+        start = 2 * np.random.rand(size) - 1
+        mean = start
+        var = np.ones(size)
+        potential = QuadPotentialDiagAdapt(size, mean, var, 10)
     elif init == "nuts":
+        raise NotImplementedError("`init='nuts'` is not implemented yet.")
         init_trace = sample(
             draws=n_init, step=NUTS(), tune=n_init // 2, random_seed=random_seed
         )
         cov = np.atleast_1d(pm.trace_cov(init_trace))
         start = list(np.random.choice(init_trace, chains))
-        potential = quadpotential.QuadPotentialFull(cov)
+        potential = QuadPotentialFull(cov)
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 
-    step = NUTS(potential=potential, model=model, **kwargs)
+    step = NUTS(
+        logp_dlogp_func=logp_dlogp_func, size=size, potential=potential, **kwargs
+    )
 
     return start, step
