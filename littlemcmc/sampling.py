@@ -75,7 +75,7 @@ def _sample_one_chain(
         q, step_stats = step._astep(q)
         trace[:, i] = q
         stats.extend(step_stats)
-        if i == tune:
+        if i == tune - 1:  # Draws are 0-indexed, not one-indexed
             step.stop_tuning()
 
     if discard_tuned_samples:
