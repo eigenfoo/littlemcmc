@@ -15,6 +15,7 @@
 """Base class for Hamiltonian Monte Carlo samplers."""
 
 from collections import namedtuple
+from typing import Callable, Tuple, List, Optional
 import numpy as np
 
 from . import integration, step_sizes
@@ -30,20 +31,20 @@ class BaseHMC:
 
     def __init__(
         self,
-        logp_dlogp_func,
-        size,
-        scaling,
-        is_cov,
+        logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+        size: int,
+        scaling: Optional[np.ndarray],
+        is_cov: bool,
         potential,
-        target_accept,
-        Emax,
-        adapt_step_size,
-        step_scale,
-        gamma,
-        k,
-        t0,
-        step_rand,
-    ):
+        target_accept: float,
+        Emax: float,
+        adapt_step_size: bool,
+        step_scale: float,
+        gamma: float,
+        k: float,
+        t0: int,
+        step_rand: Optional[Callable[[float], float]],
+    ) -> None:
         """Set up Hamiltonian samplers with common structures.
 
         Parameters
@@ -112,40 +113,25 @@ class BaseHMC:
             self.potential, self._logp_dlogp_func
         )
         self._step_rand = step_rand
-        self._warnings = []
+        self._warnings: List[SamplerWarning] = []
         self._samples_after_tune = 0
         self._num_divs_sample = 0
 
-    def step(self, array):
-        """Perform a single HMC iteration.
-
-        Generates sampler statistics if the sampler supports it.
-
-        Parameters
-        ----------
-        array : array-like
-            Current position.
-        """
-        if self.generates_stats:
-            apoint, stats = self._astep(array)
-            return apoint, stats
-        else:
-            apoint = self._astep(array)
-            return apoint
-
-    def stop_tuning(self):
+    def stop_tuning(self) -> None:
         """Stop tuning."""
         if hasattr(self, "tune"):
             self.tune = False
 
-    def _hamiltonian_step(self, start, p0, step_size):
+    def _hamiltonian_step(
+        self, start: np.ndarray, p0: np.ndarray, step_size: float
+    ) -> HMCStepData:
         """Compute one Hamiltonian trajectory and return the next state.
 
         Subclasses must overwrite this method and return a `HMCStepData`.
         """
         raise NotImplementedError("Abstract method")
 
-    def _astep(self, q0):
+    def _astep(self, q0: np.ndarray):
         """Perform a single HMC iteration."""
         p0 = self.potential.random()
         start = self.integrator.compute_state(q0, p0)
@@ -199,7 +185,7 @@ class BaseHMC:
 
         return hmc_step.end.q, [stats]
 
-    def warnings(self):
+    def warnings(self) -> List[SamplerWarning]:
         """Generate warnings from HMC sampler."""
         # list.copy() is only available in Python 3
         warnings = self._warnings.copy()

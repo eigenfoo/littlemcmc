@@ -14,6 +14,7 @@
 
 """Hamiltonian Monte Carlo sampler."""
 
+from typing import Callable, Tuple, Optional
 import numpy as np
 
 from .integration import IntegrationError
@@ -51,20 +52,20 @@ class HamiltonianMC(BaseHMC):
 
     def __init__(
         self,
-        logp_dlogp_func=None,
-        size=None,
-        scaling=None,
-        is_cov=False,
+        logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+        size: int,
+        scaling: Optional[np.ndarray] = None,
+        is_cov: bool = False,
         potential=None,
-        target_accept=0.8,
-        Emax=1000,
-        adapt_step_size=True,
-        step_scale=0.25,
-        gamma=0.05,
-        k=0.75,
-        t0=10,
-        step_rand=None,
-        path_length=2.0,
+        target_accept: float = 0.8,
+        Emax: float = 1000,
+        adapt_step_size: bool = True,
+        step_scale: float = 0.25,
+        gamma: float = 0.05,
+        k: float = 0.75,
+        t0: int = 10,
+        step_rand: Optional[Callable[[float], float]] = None,
+        path_length: float = 2.0,
     ):
         """Set up the Hamiltonian Monte Carlo sampler.
 
@@ -128,7 +129,9 @@ class HamiltonianMC(BaseHMC):
         )
         self.path_length = path_length
 
-    def _hamiltonian_step(self, start, p0, step_size):
+    def _hamiltonian_step(
+        self, start: np.ndarray, p0: np.ndarray, step_size: float
+    ) -> HMCStepData:
         path_length = np.random.rand() * self.path_length
         n_steps = max(1, int(path_length / step_size))
 
