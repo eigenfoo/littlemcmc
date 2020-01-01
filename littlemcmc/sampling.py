@@ -16,28 +16,30 @@
 
 import os
 from collections.abc import Iterable
+from typing import Callable, Tuple, Optional, Union, List
 import logging
 from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm, tqdm_notebook
 from .nuts import NUTS
-from .quadpotential import QuadPotentialDiagAdapt, QuadPotentialFull
+from .quadpotential import QuadPotentialDiagAdapt
+from .report import SamplerWarning
 
 _log = logging.getLogger("littlemcmc")
 
 
 def _sample_one_chain(
-    logp_dlogp_func,
-    size,
-    draws,
-    tune,
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    size: int,
+    draws: int,
+    tune: int,
     step=None,
-    init="auto",
-    start=None,
-    random_seed=None,
-    discard_tuned_samples=True,
-    progressbar=True,
-    progressbar_position=None,
+    init: str = "auto",
+    start: Optional[np.ndarray] = None,
+    random_seed: Union[None, int, List[int]] = None,
+    discard_tuned_samples: bool = True,
+    progressbar: bool = True,
+    progressbar_position: Optional[int] = None,
     **kwargs,
 ):
     """Sample one chain in one process."""
@@ -48,7 +50,6 @@ def _sample_one_chain(
         logp_dlogp_func=logp_dlogp_func,
         size=size,
         init=init,
-        n_init=500,
         random_seed=random_seed,
         **kwargs,
     )
@@ -65,7 +66,7 @@ def _sample_one_chain(
         progressbar_position = 0
 
     trace = np.zeros([size, tune + draws])
-    stats = []
+    stats: List[SamplerWarning] = []
 
     if progressbar or progressbar == "console":
         iterator = tqdm(range(tune + draws), position=progressbar_position)
@@ -79,9 +80,7 @@ def _sample_one_chain(
         trace[:, i] = q
         stats.extend(step_stats)
         if i == tune - 1:  # Draws are 0-indexed, not 1-indexed
-            assert step.tune
             step.stop_tuning()
-            assert not step.tune
 
     if discard_tuned_samples:
         trace = trace[:, tune:]
@@ -91,16 +90,16 @@ def _sample_one_chain(
 
 
 def sample(
-    logp_dlogp_func,
-    size,
-    draws,
-    tune,
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    size: int,
+    draws: int,
+    tune: int,
     step=None,
-    chains=None,
-    cores=None,
-    start=None,
-    random_seed=None,
-    discard_tuned_samples=True,
+    chains: Optional[int] = None,
+    cores: Optional[int] = None,
+    start: Optional[np.ndarray] = None,
+    random_seed: Optional[Union[int, List[int]]] = None,
+    discard_tuned_samples: bool = True,
 ):
     """Sample."""
     if cores is None:
@@ -111,7 +110,7 @@ def sample(
     if random_seed is None or isinstance(random_seed, int):
         if random_seed is not None:
             np.random.seed(random_seed)
-        random_seed = [np.random.randint(2 ** 30) for _ in range(chains)]
+        random_seed = [np.random.randint(2 ** 30) for _ in range(chains)]  # type: ignore
     elif isinstance(random_seed, Iterable) and len(random_seed) != chains:
         random_seed = random_seed[:chains]
     elif not isinstance(random_seed, Iterable):
@@ -148,7 +147,11 @@ def sample(
 
 
 def init_nuts(
-    logp_dlogp_func, size, init="auto", n_init=500, random_seed=None, **kwargs,
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    size: int,
+    init: str = "auto",
+    random_seed: Union[None, int, List[int]] = None,
+    **kwargs,
 ):
     """Set up the mass matrix initialization for NUTS.
 
@@ -169,11 +172,6 @@ def init_nuts(
           value (usually the prior mean) as starting point.
         * jitter+adapt_diag : Same as `'adapt_diag'`, but use uniform jitter in
           [-1, 1] as starting point in each chain.
-        * nuts : Run NUTS and estimate posterior mean and mass matrix from the
-          trace.
-    n_init: int
-        Number of iterations of initializer. If using `'nuts'`, this is the
-        number of draws.
     **kwargs: keyword arguments
         Extra keyword arguments are forwarded to littlemcmc.NUTS.
 
@@ -209,14 +207,6 @@ def init_nuts(
         mean = start
         var = np.ones(size)
         potential = QuadPotentialDiagAdapt(size, mean, var, 10)
-    elif init == "nuts":
-        raise NotImplementedError("`init='nuts'` is not implemented yet.")
-        init_trace = sample(
-            draws=n_init, step=NUTS(), tune=n_init // 2, random_seed=random_seed
-        )
-        cov = np.atleast_1d(pm.trace_cov(init_trace))
-        start = list(np.random.choice(init_trace, chains))
-        potential = QuadPotentialFull(cov)
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 

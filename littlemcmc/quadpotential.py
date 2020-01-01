@@ -103,7 +103,7 @@ class QuadPotential(object):
         """Compute kinetic energy at a position in parameter space."""
         raise NotImplementedError("Abstract method")
 
-    def random(self, x):
+    def random(self):
         """Draw random value from QuadPotential."""
         raise NotImplementedError("Abstract method")
 

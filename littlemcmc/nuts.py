@@ -17,6 +17,7 @@
 from __future__ import division
 
 from collections import namedtuple
+from typing import Callable, Tuple, List, Optional
 
 import numpy as np
 import numpy.random as nr
@@ -28,7 +29,7 @@ from .report import SamplerWarning, WarningType
 __all__ = ["NUTS"]
 
 
-def logbern(log_p):
+def logbern(log_p: float) -> bool:
     if np.isnan(log_p):
         raise FloatingPointError("log_p can't be nan.")
     return np.log(nr.uniform()) < log_p
@@ -107,22 +108,22 @@ class NUTS(BaseHMC):
 
     def __init__(
         self,
-        logp_dlogp_func=None,
-        size=None,
-        scaling=None,
-        is_cov=False,
+        logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+        size: int,
+        scaling: Optional[np.ndarray] = None,
+        is_cov: bool = False,
         potential=None,
-        target_accept=0.8,
-        Emax=1000,
-        adapt_step_size=True,
-        step_scale=0.25,
-        gamma=0.05,
-        k=0.75,
-        t0=10,
-        step_rand=None,
-        path_length=2.0,
-        max_treedepth=10,
-        early_max_treedepth=8,
+        target_accept: float = 0.8,
+        Emax: float = 1000,
+        adapt_step_size: bool = True,
+        step_scale: float = 0.25,
+        gamma: float = 0.05,
+        k: float = 0.75,
+        t0: int = 10,
+        step_rand: Optional[Callable[[float], float]] = None,
+        path_length: float = 2.0,
+        max_treedepth: int = 10,
+        early_max_treedepth: int = 8,
     ):
         r"""Set up the No-U-Turn sampler.
 
@@ -201,7 +202,9 @@ class NUTS(BaseHMC):
         self.path_length = path_length
         self._reached_max_treedepth = 0
 
-    def _hamiltonian_step(self, start, p0, step_size):
+    def _hamiltonian_step(
+        self, start: np.ndarray, p0: np.ndarray, step_size: float
+    ) -> HMCStepData:
         if self.tune and self.iter_count < 200:
             max_treedepth = self.early_max_treedepth
         else:
@@ -223,7 +226,7 @@ class NUTS(BaseHMC):
         accept_stat = stats["mean_tree_accept"]
         return HMCStepData(tree.proposal, accept_stat, divergence_info, stats)
 
-    def warnings(self):
+    def warnings(self) -> List[SamplerWarning]:
         """Generate warnings from NUTS sampler."""
         warnings = super(NUTS, self).warnings()
         n_samples = self._samples_after_tune
