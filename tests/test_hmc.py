@@ -44,15 +44,15 @@ def test_leapfrog_reversible():
 
 def test_nuts_tuning():
     size = 1
-    stepper = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
     draws = 5
     tune = 5
+    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, stepper, draws, tune, chains=chains, cores=cores
+        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
     )
 
-    assert not stepper.tune
+    assert not step.tune
     # FIXME revisit this test once trace object has been stabilized.
     # assert np.all(trace['step_size'][5:] == trace['step_size'][5])

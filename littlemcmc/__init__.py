@@ -16,7 +16,7 @@
 
 __version__ = "0.1.0"
 
-from .sampling import sample
+from .sampling import sample, init_nuts
 from .hmc import HamiltonianMC
 from .nuts import NUTS
 from .quadpotential import (
