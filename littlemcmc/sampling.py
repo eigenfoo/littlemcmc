@@ -29,9 +29,9 @@ _log = logging.getLogger("littlemcmc")
 def _sample_one_chain(
     logp_dlogp_func,
     size,
-    step,
     draws,
     tune,
+    step=None,
     init="auto",
     start=None,
     random_seed=None,
@@ -44,7 +44,7 @@ def _sample_one_chain(
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    start_, step = init_nuts(
+    start_, step_ = init_nuts(
         logp_dlogp_func=logp_dlogp_func,
         size=size,
         init=init,
@@ -57,6 +57,9 @@ def _sample_one_chain(
         q = start
     else:
         q = start_
+
+    if step is None:
+        step = step_
 
     if progressbar_position is None:
         progressbar_position = 0
@@ -75,8 +78,10 @@ def _sample_one_chain(
         q, step_stats = step._astep(q)
         trace[:, i] = q
         stats.extend(step_stats)
-        if i == tune - 1:  # Draws are 0-indexed, not one-indexed
+        if i == tune - 1:  # Draws are 0-indexed, not 1-indexed
+            assert step.tune
             step.stop_tuning()
+            assert not step.tune
 
     if discard_tuned_samples:
         trace = trace[:, tune:]
@@ -88,9 +93,9 @@ def _sample_one_chain(
 def sample(
     logp_dlogp_func,
     size,
-    step,
     draws,
     tune,
+    step=None,
     chains=None,
     cores=None,
     start=None,
