@@ -39,3 +39,18 @@ Quadpotentials (a.k.a. Mass Matrices)
     QuadPotentialDiagAdapt
     QuadPotentialFullAdapt
 
+Dual Averaging Step Size Adaptation
+-----------------------------------
+
+.. autosummary::
+    :toctree: generated/
+
+    DualAverageAdaptation
+
+Integrators 
+-----------
+
+.. autosummary::
+    :toctree: generated/
+
+    CpuLeapfrogIntegrator
