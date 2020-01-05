@@ -27,3 +27,5 @@ from .quadpotential import (
     QuadPotentialDiagAdapt,
     QuadPotentialFullAdapt,
 )
+from .integration import CpuLeapfrogIntegrator
+from .step_sizes import DualAverageAdaptation
