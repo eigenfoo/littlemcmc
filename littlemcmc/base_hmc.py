@@ -54,25 +54,34 @@ class BaseHMC:
             the log-probability, respectively.
         size : int
             Total number of parameters. Dimensionality of the output of
-            `logp_dlogp_func`.
+            ``logp_dlogp_func``.
         scaling : 1 or 2-dimensional array-like
             Scaling for momentum distribution. 1 dimensional arrays are
-            interpreted as a matrix diagonal. Only one of `scaling` or
-            `potential` may be non-None.
+            interpreted as a matrix diagonal. Only one of ``scaling`` or
+            ``potential`` may be non-None.
         is_cov : bool
             Treat scaling as a covariance matrix/vector if True, else treat
             it as a precision matrix/vector
         potential : littlemcmc.quadpotential.Potential, optional
-            An object that represents the Hamiltonian with methods `velocity`,
-            `energy`, and `random` methods. Only one of `scaling` or `potential`
-            may be non-None.
+            An object that represents the Hamiltonian with methods ``velocity``,
+            ``energy``, and ``random`` methods. Only one of ``scaling`` or
+            ``potential`` may be non-None.
         target_accept : float
+            Adapt the step size such that the average acceptance probability
+            across the trajectories are close to target_accept. Higher values
+            for target_accept lead to smaller step sizes. Setting this to higher
+            values like 0.9 or 0.99 can help with sampling from difficult
+            posteriors. Valid values are between 0 and 1 (exclusive).
         Emax : float
+            The maximum allowable change in the value of the Hamiltonian. Any
+            trajectories that result in changes in the value of the Hamiltonian
+            larger than ``Emax`` will be declared divergent.
         adapt_step_size : bool, default=True
             If True, performs dual averaging step size adaptation. If False,
-            `k`, `t0`, `gamma` and `target_accept` are ignored.
+            ``k``, ``t0``, ``gamma`` and ``target_accept`` are ignored.
         step_scale : float
-            Size of steps to take, automatically scaled down by 1 / (size ** 0.25)
+            Size of steps to take, automatically scaled down by 1 / (``size`` **
+            0.25).
         gamma : float, default .05
         k : float, default .75
             Parameter for dual averaging for step size adaptation. Values
@@ -81,8 +90,9 @@ class BaseHMC:
         t0 : int, default 10
             Parameter for dual averaging. Higher values slow initial adaptation.
         step_rand : Python callable
-            Called on step size to randomize, immediately before adapting step
-            size.
+            Callback for step size adaptation. Called on the step size at each
+            iteration immediately before performing dual-averaging step size
+            adaptation.
         """
         self._logp_dlogp_func = logp_dlogp_func
         self.adapt_step_size = adapt_step_size
