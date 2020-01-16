@@ -140,8 +140,9 @@ def sample(
         for i, seed in enumerate(random_seed)
     )
 
+    # TODO return chain_stats in a more initelligent way.
     trace = np.hstack([chain_trace for (chain_trace, _) in results])
-    stats = [chain_stats for (_, chain_stats) in results]  # FIXME reshape stats
+    stats = [chain_stats for (_, chain_stats) in results]
 
     return trace, stats
 
