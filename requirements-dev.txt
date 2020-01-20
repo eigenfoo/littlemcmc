@@ -6,6 +6,11 @@ pytest
 pytest-cov
 pytest-html
 
+# Packaging requirements
+setuptools
+twine
+wheel
+
 # Sphinx requirements
 numpydoc
 sphinx

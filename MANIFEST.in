@@ -1,0 +1,6 @@
+recursive-include docs *
+include *.md
+include requirements.txt
+include LICENSE.txt
+include LICENSE.pymc3.txt
+include LICENSE.pymc4.txt

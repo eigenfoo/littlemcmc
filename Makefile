@@ -1,6 +1,6 @@
 .DEFAULT_GOAL = help
 
-PYTHON := python
+PYTHON := python3
 PIP := pip
 CONDA := conda
 SHELL := bash
@@ -83,3 +83,13 @@ clean:  # Clean project directories.
 	find littlemcmc/ tests/ -type d -name "__pycache__" -delete
 	find littlemcmc/ tests/ -type f -name "*.pyc" -delete
 	${MAKE} -C docs/ clean
+
+.PHONY: package
+package: clean  # Package glaze in preparation for releasing to PyPI.
+	${PYTHON} setup.py sdist bdist_wheel
+	twine check dist/*
+	@printf "\n\n\033[1;34mTo upload to Test PyPI (recommended!), run:\033[0m\n\n"
+	@printf "\t\033[1;34mpython3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*\033[0m\n\n"
+	@printf "\033[1;34mTo upload to PyPI, run:\033[0m\n\n"
+	@printf "\t\033[1;34mpython3 -m twine upload dist/*\033[0m\n\n"
+	@printf "\033[1;34mYou will need PyPI credentials.\033[0m\n\n"
