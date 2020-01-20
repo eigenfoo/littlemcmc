@@ -12,6 +12,14 @@
 > out of [the PyMC project](https://github.com/pymc-devs). Not to be confused
 > with [minimc](https://github.com/ColCarroll/minimc).
 
+## Installation
+
+The latest release of LittleMCMC can be installed from PyPI:
+
+```bash
+pip install littlemcmc
+```
+
 ## License
 
 LittleMCMC is modified from [the PyMC3 and PyMC4
