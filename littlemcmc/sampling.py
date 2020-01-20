@@ -145,20 +145,11 @@ def sample(
     # TODO: we should target an ArviZ-like data structure...
     stats_ = [iter_stats for (_, chain_stats) in results for iter_stats in chain_stats]
     stats = {
-        "tune": np.array([iter_stats["tune"] for iter_stats in stats_]).astype(int),
-        "diverging": np.array([iter_stats["diverging"] for iter_stats in stats_]).astype(int),
-        "depth": np.array([iter_stats["depth"] for iter_stats in stats_]).astype(int),
-        "mean_tree_accept": np.hstack([iter_stats["mean_tree_accept"] for iter_stats in stats_]),
-        "energy_error": np.hstack([iter_stats["energy_error"] for iter_stats in stats_]),
-        "energy": np.hstack([iter_stats["energy"] for iter_stats in stats_]),
-        "tree_size": np.array([iter_stats["tree_size"] for iter_stats in stats_]).astype(int),
-        "max_energy_error": np.hstack([iter_stats["max_energy_error"] for iter_stats in stats_]),
-        "model_logp": np.hstack([iter_stats["model_logp"] for iter_stats in stats_]),
-        "step_size": np.hstack([iter_stats["step_size"] for iter_stats in stats_]),
-        "step_size_bar": np.hstack([iter_stats["step_size_bar"] for iter_stats in stats_]),
+        name: np.reshape(np.array([iter_stats[name] for iter_stats in stats_]), [-1]).astype(dtype)
+        for (name, dtype) in step.stats_dtypes[0].items()
     }
 
-    return trace, stats
+    return trace, stats, results
 
 
 def init_nuts(
