@@ -110,9 +110,7 @@ class DualAverageAdaptation(object):
                 "number of tuning steps." % (mean_accept, target_accept)
             )
             info = {"target": target_accept, "actual": mean_accept}
-            warning = SamplerWarning(
-                WarningType.BAD_ACCEPTANCE, msg, "warn", None, None, info
-            )
+            warning = SamplerWarning(WarningType.BAD_ACCEPTANCE, msg, "warn", None, None, info)
             return [warning]
         else:
             return []

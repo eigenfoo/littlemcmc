@@ -74,9 +74,7 @@ def partial_check_positive_definite(C):
     (i,) = np.nonzero(np.logical_or(np.isnan(d), d <= 0))
 
     if len(i):
-        raise PositiveDefiniteError(
-            "Simple check failed. Diagonal contains negatives", i
-        )
+        raise PositiveDefiniteError("Simple check failed. Diagonal contains negatives", i)
 
 
 class PositiveDefiniteError(ValueError):
@@ -86,10 +84,7 @@ class PositiveDefiniteError(ValueError):
         self.msg = msg
 
     def __str__(self):
-        return "Scaling is not positive definite: %s. Check indexes %s." % (
-            self.msg,
-            self.idx,
-        )
+        return "Scaling is not positive definite: %s. Check indexes %s." % (self.msg, self.idx,)
 
 
 class QuadPotential(object):
@@ -166,13 +161,11 @@ class QuadPotentialDiagAdapt(QuadPotential):
             raise ValueError("Initial mean must be one-dimensional.")
         if initial_diag is not None and len(initial_diag) != n:
             raise ValueError(
-                "Wrong shape for initial_diag: expected %s got %s"
-                % (n, len(initial_diag))
+                "Wrong shape for initial_diag: expected %s got %s" % (n, len(initial_diag))
             )
         if len(initial_mean) != n:
             raise ValueError(
-                "Wrong shape for initial_mean: expected %s got %s"
-                % (n, len(initial_mean))
+                "Wrong shape for initial_mean: expected %s got %s" % (n, len(initial_mean))
             )
 
         if dtype is None:
@@ -234,9 +227,7 @@ class QuadPotentialDiagAdapt(QuadPotential):
         if self._n_samples > 0 and self._n_samples % self.adaptation_window == 0:
             self._foreground_var = self._background_var
             self._background_var = _WeightedVariance(self._n, dtype=self.dtype)
-            self.adaptation_window = int(
-                self.adaptation_window * self.adaptation_window_multiplier
-            )
+            self.adaptation_window = int(self.adaptation_window * self.adaptation_window_multiplier)
 
         self._n_samples += 1
 
@@ -267,8 +258,7 @@ class QuadPotentialDiagAdapt(QuadPotential):
             errmsg = ["Mass matrix contains zeros on the diagonal. "]
             for ii in index:
                 errmsg.append(
-                    "The derivative of RV `{}`.ravel()[{}]"
-                    " is zero.".format(*name_slc[ii])
+                    "The derivative of RV `{}`.ravel()[{}]" " is zero.".format(*name_slc[ii])
                 )
             raise ValueError("\n".join(errmsg))
 
@@ -283,8 +273,7 @@ class QuadPotentialDiagAdapt(QuadPotential):
             errmsg = ["Mass matrix contains non-finite values on the diagonal. "]
             for ii in index:
                 errmsg.append(
-                    "The derivative of RV `{}`.ravel()[{}]"
-                    " is non-finite.".format(*name_slc[ii])
+                    "The derivative of RV `{}`.ravel()[{}]" " is non-finite.".format(*name_slc[ii])
                 )
             raise ValueError("\n".join(errmsg))
 
@@ -293,12 +282,7 @@ class _WeightedVariance(object):
     """Online algorithm for computing mean of variance."""
 
     def __init__(
-        self,
-        nelem,
-        initial_mean=None,
-        initial_variance=None,
-        initial_weight=0,
-        dtype="d",
+        self, nelem, initial_mean=None, initial_variance=None, initial_weight=0, dtype="d",
     ):
         self._dtype = dtype
         self.w_sum = float(initial_weight)
@@ -486,13 +470,11 @@ class QuadPotentialFullAdapt(QuadPotentialFull):
             raise ValueError("Initial mean must be one-dimensional.")
         if initial_cov is not None and initial_cov.shape != (n, n):
             raise ValueError(
-                "Wrong shape for initial_cov: expected %s got %s"
-                % (n, initial_cov.shape)
+                "Wrong shape for initial_cov: expected %s got %s" % (n, initial_cov.shape)
             )
         if len(initial_mean) != n:
             raise ValueError(
-                "Wrong shape for initial_mean: expected %s got %s"
-                % (n, len(initial_mean))
+                "Wrong shape for initial_mean: expected %s got %s" % (n, len(initial_mean))
             )
 
         if dtype is None:
@@ -570,12 +552,7 @@ class _WeightedCovariance:
     """
 
     def __init__(
-        self,
-        nelem,
-        initial_mean=None,
-        initial_covariance=None,
-        initial_weight=0,
-        dtype="d",
+        self, nelem, initial_mean=None, initial_covariance=None, initial_weight=0, dtype="d",
     ):
         self._dtype = dtype
         self.n_samples = float(initial_weight)

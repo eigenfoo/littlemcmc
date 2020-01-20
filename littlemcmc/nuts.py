@@ -134,7 +134,7 @@ class NUTS(BaseHMC):
             the log-probability, respectively.
         size : int
             Total number of parameters. Dimensionality of the output of
-            `logp_dlogp_func`.
+            ``logp_dlogp_func``.
         scaling : 1 or 2-dimensional array-like
             Scaling for momentum distribution. 1 dimensional arrays are
             interpreted as a matrix diagonal.
@@ -142,21 +142,25 @@ class NUTS(BaseHMC):
             Treat scaling as a covariance matrix/vector if True, else treat
             it as a precision matrix/vector
         potential : littlemcmc.quadpotential.Potential, optional
-            An object that represents the Hamiltonian with methods `velocity`,
-            `energy`, and `random` methods.
+            An object that represents the Hamiltonian with methods ``velocity``,
+            ``energy``, and ``random`` methods. Only one of ``scaling`` or
+            ``potential`` may be non-None.
         target_accept : float
-            Adapt the step size such that the average acceptance
-            probability across the trajectories are close to target_accept.
-            Higher values for target_accept lead to smaller step sizes.
-            Setting this to higher values like 0.9 or 0.99 can help
-            with sampling from difficult posteriors. Valid values are
-            between 0 and 1 (exclusive).
+            Adapt the step size such that the average acceptance probability
+            across the trajectories are close to target_accept. Higher values
+            for target_accept lead to smaller step sizes. Setting this to higher
+            values like 0.9 or 0.99 can help with sampling from difficult
+            posteriors. Valid values are between 0 and 1 (exclusive).
         Emax : float
+            The maximum allowable change in the value of the Hamiltonian. Any
+            trajectories that result in changes in the value of the Hamiltonian
+            larger than ``Emax`` will be declared divergent.
         adapt_step_size : bool, default=True
             If True, performs dual averaging step size adaptation. If False,
-            `k`, `t0`, `gamma` and `target_accept` are ignored.
+            ``k``, ``t0``, ``gamma`` and ``target_accept`` are ignored.
         step_scale : float
-            Size of steps to take, automatically scaled down by 1 / (size ** 0.25)
+            Size of steps to take, automatically scaled down by 1 / (``size`` **
+            0.25).
         gamma : float, default .05
         k : float, default .75
             Parameter for dual averaging for step size adaptation. Values
@@ -165,8 +169,9 @@ class NUTS(BaseHMC):
         t0 : int, default 10
             Parameter for dual averaging. Higher values slow initial adaptation.
         step_rand : Python callable
-            Called on step size to randomize, immediately before adapting step
-            size.
+            Callback for step size adaptation. Called on the step size at each
+            iteration immediately before performing dual-averaging step size
+            adaptation.
         path_length : float, default=2
             total length to travel
         max_treedepth : int, default=10
@@ -202,9 +207,7 @@ class NUTS(BaseHMC):
         self.path_length = path_length
         self._reached_max_treedepth = 0
 
-    def _hamiltonian_step(
-        self, start: np.ndarray, p0: np.ndarray, step_size: float
-    ) -> HMCStepData:
+    def _hamiltonian_step(self, start: np.ndarray, p0: np.ndarray, step_size: float) -> HMCStepData:
         if self.tune and self.iter_count < 200:
             max_treedepth = self.early_max_treedepth
         else:
@@ -246,9 +249,7 @@ class NUTS(BaseHMC):
 Proposal = namedtuple("Proposal", "q, q_grad, energy, p_accept, logp")
 
 # A subtree of the binary tree built by nuts.
-Subtree = namedtuple(
-    "Subtree", "left, right, p_sum, proposal, log_size, accept_sum, n_proposals"
-)
+Subtree = namedtuple("Subtree", "left, right, p_sum, proposal, log_size, accept_sum, n_proposals")
 
 
 class _Tree(object):
@@ -275,9 +276,7 @@ class _Tree(object):
         self.start_energy = np.array(start.energy)
 
         self.left = self.right = start
-        self.proposal = Proposal(
-            start.q, start.q_grad, start.energy, 1.0, start.model_logp
-        )
+        self.proposal = Proposal(start.q, start.q_grad, start.energy, 1.0, start.model_logp)
         self.depth = 0
         self.log_size = 0
         self.accept_sum = 0
@@ -345,15 +344,11 @@ class _Tree(object):
             if np.abs(energy_change) < self.Emax:
                 p_accept = min(1, np.exp(-energy_change))
                 log_size = -energy_change
-                proposal = Proposal(
-                    right.q, right.q_grad, right.energy, p_accept, right.model_logp
-                )
+                proposal = Proposal(right.q, right.q_grad, right.energy, p_accept, right.model_logp)
                 tree = Subtree(right, right, right.p, proposal, log_size, p_accept, 1)
                 return tree, None, False
             else:
-                error_msg = (
-                    "Energy change in leapfrog step is too large: %s." % energy_change
-                )
+                error_msg = "Energy change in leapfrog step is too large: %s." % energy_change
                 error = None
         tree = Subtree(None, None, None, None, -np.inf, 0, 1)
         divergance_info = DivergenceInfo(error_msg, error, left)

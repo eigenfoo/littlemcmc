@@ -38,7 +38,7 @@ def _sample_one_chain(
     start: Optional[np.ndarray] = None,
     random_seed: Union[None, int, List[int]] = None,
     discard_tuned_samples: bool = True,
-    progressbar: bool = True,
+    progressbar: Union[bool, str] = True,
     progressbar_position: Optional[int] = None,
     **kwargs,
 ):
@@ -47,11 +47,7 @@ def _sample_one_chain(
         np.random.seed(random_seed)
 
     start_, step_ = init_nuts(
-        logp_dlogp_func=logp_dlogp_func,
-        size=size,
-        init=init,
-        random_seed=random_seed,
-        **kwargs,
+        logp_dlogp_func=logp_dlogp_func, size=size, init=init, random_seed=random_seed, **kwargs,
     )
 
     if start is not None:
@@ -68,10 +64,10 @@ def _sample_one_chain(
     trace = np.zeros([size, tune + draws])
     stats: List[SamplerWarning] = []
 
-    if progressbar or progressbar == "console":
-        iterator = tqdm(range(tune + draws), position=progressbar_position)
-    elif progressbar == "notebook":
+    if progressbar == "notebook":
         iterator = tqdm_notebook(range(tune + draws), position=progressbar_position)
+    elif progressbar == "console" or progressbar:
+        iterator = tqdm(range(tune + draws), position=progressbar_position)
     else:
         iterator = range(tune + draws)
 
@@ -100,6 +96,7 @@ def sample(
     start: Optional[np.ndarray] = None,
     random_seed: Optional[Union[int, List[int]]] = None,
     discard_tuned_samples: bool = True,
+    progressbar: Union[bool, str] = True,
 ):
     """Sample."""
     if cores is None:
@@ -125,24 +122,32 @@ def sample(
         _log.warning(msg)
 
     _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
-    results = Parallel(n_jobs=cores)(
+    results = Parallel(n_jobs=cores, backend="multiprocessing")(
         delayed(_sample_one_chain)(
             logp_dlogp_func=logp_dlogp_func,
             size=size,
-            step=step,
             draws=draws,
             tune=tune,
+            step=step,
             start=start,
             random_seed=seed,
             discard_tuned_samples=discard_tuned_samples,
+            progressbar=progressbar,
             progressbar_position=i,
         )
         for i, seed in enumerate(random_seed)
     )
 
-    # TODO return chain_stats in a more initelligent way.
-    trace = np.hstack([chain_trace for (chain_trace, _) in results])
-    stats = [chain_stats for (_, chain_stats) in results]
+    # Flatten `trace` to be 1-dimensional
+    trace = np.reshape([chain_trace for (chain_trace, _) in results], [-1])
+
+    # Reshape `stats` to a dictionary
+    # TODO: we should target an ArviZ-like data structure...
+    stats_ = [iter_stats for (_, chain_stats) in results for iter_stats in chain_stats]
+    stats = {
+        name: np.reshape(np.array([iter_stats[name] for iter_stats in stats_]), [-1]).astype(dtype)
+        for (name, dtype) in step.stats_dtypes[0].items()
+    }
 
     return trace, stats
 
@@ -211,8 +216,6 @@ def init_nuts(
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 
-    step = NUTS(
-        logp_dlogp_func=logp_dlogp_func, size=size, potential=potential, **kwargs
-    )
+    step = NUTS(logp_dlogp_func=logp_dlogp_func, size=size, potential=potential, **kwargs)
 
     return start, step

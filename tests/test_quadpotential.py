@@ -145,10 +145,7 @@ def test_weighted_covariance(ndim=10, seed=5432):
 
     # Make sure that the weighted estimate also works
     est2 = quadpotential._WeightedCovariance(
-        ndim,
-        np.mean(samples[:10], axis=0),
-        np.cov(samples[:10], rowvar=0, bias=True),
-        10,
+        ndim, np.mean(samples[:10], axis=0), np.cov(samples[:10], rowvar=0, bias=True), 10,
     )
     for sample in samples[10:]:
         est2.add_sample(sample, 1)
@@ -185,9 +182,7 @@ def test_full_adapt_sample_p(seed=4566):
 def test_full_adapt_update_window(seed=1123):
     np.random.seed(seed)
     init_cov = np.array([[1.0, 0.02], [0.02, 0.8]])
-    pot = quadpotential.QuadPotentialFullAdapt(
-        2, np.zeros(2), init_cov, 1, update_window=50
-    )
+    pot = quadpotential.QuadPotentialFullAdapt(2, np.zeros(2), init_cov, 1, update_window=50)
     assert np.allclose(pot._cov, init_cov)
     for i in range(49):
         pot.update(np.random.randn(2), None, True)

@@ -26,6 +26,8 @@ Step Methods
     HamiltonianMC
     NUTS
 
+.. _quadpotentials_api:
+
 Quadpotentials (a.k.a. Mass Matrices)
 -------------------------------------
 
@@ -39,3 +41,22 @@ Quadpotentials (a.k.a. Mass Matrices)
     QuadPotentialDiagAdapt
     QuadPotentialFullAdapt
 
+.. _step_sizes_api:
+
+Dual Averaging Step Size Adaptation
+-----------------------------------
+
+.. autosummary::
+    :toctree: generated/
+
+    step_sizes.DualAverageAdaptation
+
+.. _integrators_api:
+
+Integrators 
+-----------
+
+.. autosummary::
+    :toctree: generated/
+
+    integration.CpuLeapfrogIntegrator
