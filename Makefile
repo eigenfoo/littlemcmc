@@ -1,6 +1,6 @@
 .DEFAULT_GOAL = help
 
-PYTHON := python3
+PYTHON := python
 PIP := pip
 CONDA := conda
 SHELL := bash
