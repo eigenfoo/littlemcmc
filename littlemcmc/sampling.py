@@ -149,7 +149,7 @@ def sample(
         for (name, dtype) in step.stats_dtypes[0].items()
     }
 
-    return trace, stats, results
+    return trace, stats
 
 
 def init_nuts(

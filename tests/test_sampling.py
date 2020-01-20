@@ -36,8 +36,7 @@ def test_hmc_sampling_runs():
     trace, stats = lmc.sample(
         logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
     )
-    assert trace.shape == (1, 1)
-    assert len(stats) == 1
+    assert trace.shape == (1,)
 
 
 def test_nuts_sampling_runs():
@@ -50,8 +49,7 @@ def test_nuts_sampling_runs():
     trace, stats = lmc.sample(
         logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
     )
-    assert trace.shape == (1, 1)
-    assert len(stats) == 1
+    assert trace.shape == (1,)
 
 
 def test_multiprocess_sampling_runs():
