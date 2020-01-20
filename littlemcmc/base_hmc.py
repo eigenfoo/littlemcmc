@@ -119,9 +119,7 @@ class BaseHMC:
         else:
             self.potential = quad_potential(scaling, is_cov)
 
-        self.integrator = integration.CpuLeapfrogIntegrator(
-            self.potential, self._logp_dlogp_func
-        )
+        self.integrator = integration.CpuLeapfrogIntegrator(self.potential, self._logp_dlogp_func)
         self._step_rand = step_rand
         self._warnings: List[SamplerWarning] = []
         self._samples_after_tune = 0
@@ -132,9 +130,7 @@ class BaseHMC:
         if hasattr(self, "tune"):
             self.tune = False
 
-    def _hamiltonian_step(
-        self, start: np.ndarray, p0: np.ndarray, step_size: float
-    ) -> HMCStepData:
+    def _hamiltonian_step(self, start: np.ndarray, p0: np.ndarray, step_size: float) -> HMCStepData:
         """Compute one Hamiltonian trajectory and return the next state.
 
         Subclasses must overwrite this method and return a `HMCStepData`.
@@ -148,9 +144,7 @@ class BaseHMC:
 
         if not np.isfinite(start.energy):
             raise ValueError(
-                "Bad initial energy: {}. The model might be misspecified.".format(
-                    start.energy
-                )
+                "Bad initial energy: {}. The model might be misspecified.".format(start.energy)
             )
 
         # Adapt step size
@@ -204,7 +198,9 @@ class BaseHMC:
         message = ""
         n_divs = self._num_divs_sample
         if n_divs and self._samples_after_tune == n_divs:
-            message = "The chain contains only diverging samples. The model is probably misspecified."
+            message = (
+                "The chain contains only diverging samples. The model is probably misspecified."
+            )
         elif n_divs == 1:
             message = (
                 "There was 1 divergence after tuning. Increase "
@@ -217,9 +213,7 @@ class BaseHMC:
             )
 
         if message:
-            warning = SamplerWarning(
-                WarningType.DIVERGENCES, message, "error", None, None, None
-            )
+            warning = SamplerWarning(WarningType.DIVERGENCES, message, "error", None, None, None)
             warnings.append(warning)
 
         warnings.extend(self.step_adapt.warnings())
