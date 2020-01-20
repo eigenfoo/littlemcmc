@@ -65,6 +65,7 @@ class HamiltonianMC(BaseHMC):
         t0: int = 10,
         step_rand: Optional[Callable[[float], float]] = None,
         path_length: float = 2.0,
+        max_steps: int = 1024,
     ):
         """Set up the Hamiltonian Monte Carlo sampler.
 
@@ -115,6 +116,8 @@ class HamiltonianMC(BaseHMC):
             adaptation.
         path_length : float, default=2
             total length to travel
+        max_steps : int, default=1024
+            The maximum number of leapfrog steps.
         """
         super(HamiltonianMC, self).__init__(
             scaling=scaling,
@@ -132,10 +135,12 @@ class HamiltonianMC(BaseHMC):
             step_rand=step_rand,
         )
         self.path_length = path_length
+        self.max_steps = max_steps
 
     def _hamiltonian_step(self, start: np.ndarray, p0: np.ndarray, step_size: float) -> HMCStepData:
         path_length = np.random.rand() * self.path_length
         n_steps = max(1, int(path_length / step_size))
+        n_steps = min(self.max_steps, n_steps)
 
         energy_change = -np.inf
         state = start
@@ -149,6 +154,8 @@ class HamiltonianMC(BaseHMC):
             if not np.isfinite(state.energy):
                 div_info = DivergenceInfo("Divergence encountered, bad energy.", None, state)
             energy_change = start.energy - state.energy
+            if np.isnan(energy_change):
+                energy_change = -np.inf
             if np.abs(energy_change) > self.Emax:
                 div_info = DivergenceInfo(
                     "Divergence encountered, large integration error.", None, state
