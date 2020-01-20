@@ -25,7 +25,7 @@ README_FILE = PROJECT_ROOT / "README.md"
 VERSION_FILE = PROJECT_ROOT / "littlemcmc" / "__init__.py"
 
 NAME = "littlemcmc"
-DESCRIPTION = "A lightweight and performant implementation of HMC and NUTS in Python, spun out of the PyMC4 project."
+DESCRIPTION = "A lightweight and performant implementation of HMC and NUTS in Python, spun out of the PyMC project."
 AUTHOR = "George Ho"
 AUTHOR_EMAIL = "mail@eigenfoo.xyz"
 URL = "https://github.com/eigenfoo/littlemcmc"
