@@ -144,7 +144,7 @@ def sample(
     # Reshape `stats` to a dictionary
     stats_ = [iter_stats for (_, chain_stats) in results for iter_stats in chain_stats]
     stats = {
-        name: np.array([iter_stats[name] for iter_stats in stats_]).astype(dtype)
+        name: np.squeeze(np.array([iter_stats[name] for iter_stats in stats_])).astype(dtype)
         for (name, dtype) in step.stats_dtypes[0].items()
     }
 
