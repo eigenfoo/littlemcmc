@@ -29,27 +29,27 @@ def test_init_nuts():
 def test_hmc_sampling_runs():
     size = 1
     step = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size)
-    draws = 1
+    draws = 2
     tune = 1
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
         logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
     )
-    assert trace.shape == (1,)
+    assert trace.shape == (1, 2)
 
 
 def test_nuts_sampling_runs():
     size = 1
     step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
-    draws = 1
+    draws = 2
     tune = 1
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
         logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
     )
-    assert trace.shape == (1,)
+    assert trace.shape == (1, 2)
 
 
 def test_multiprocess_sampling_runs():
