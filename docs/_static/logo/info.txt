@@ -1,14 +1,14 @@
 
 Hope you enjoy your new logo, here are the people that
 made your beautiful logo happen :)
-font name: Montserrat-ExtraBold
-font link: https://fonts.google.com/specimen/Montserrat
-font author: Julieta Ulanovsky
-font author site: http://www.zkysky.com.ar/
+font name: clarikageo-medium
+font link: https://www.fontspring.com/fonts/the-refinery/clarika/clarika-geometric-medium
+font author: The Refinery
+font author site: https://www.refinerybrand.com/
 
 
 icon designer: Daniel Simon
 icon designer link: /danielsimon
         
-{"bg":"#509FF9","icon":"#FFC096","font":"#FFC096","slogan":"#ffd4aa"}
+{"bg":"#132554","icon":"#00A3DD","font":"#ffffff","slogan":"#ffffff"}
       
