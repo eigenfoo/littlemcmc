@@ -16,13 +16,13 @@ outline the various modules that may be of interest.
 Table of Contents
 -----------------
 
--  `Who should use LittleMCMC? <#Who-should-use-LittleMCMC?>`__
--  `Sampling <#Sampling>`__
+-  `Who should use LittleMCMC? <#who-should-use-littlemcmc>`__
+-  `Sampling <#how-to-sample>`__
 
    -  `Inspecting the Output of
-      lmc.sample <#Inspecting-the-Output-of-lmc.sample>`__
+      lmc.sample <#inspecting-the-output-of-lmc-sample>`__
 
--  `Other Modules <#Other-Modules>`__
+-  `Other Modules <#other-modules>`__
 
 Who should use LittleMCMC?
 --------------------------
@@ -144,8 +144,8 @@ Inspecting the Output of ``lmc.sample``
 
 .. parsed-literal::
 
-    array([-0.78591797, -0.78591797,  0.40463203, ..., -0.26565521,
-           -0.08194277, -0.46627069])
+    array([[ 0.98638645,  1.594521  ,  0.89394842, ...,  0.21827979,
+             0.35573737, -0.23779242]])
 
 
 
@@ -158,7 +158,7 @@ Inspecting the Output of ``lmc.sample``
 
 .. parsed-literal::
 
-    (4000,)
+    (1, 4000)
 
 
 
@@ -171,24 +171,24 @@ Inspecting the Output of ``lmc.sample``
 
 .. parsed-literal::
 
-    {'depth': array([2, 1, 2, ..., 1, 2, 2]),
-     'step_size': array([0.9855259, 0.9855259, 0.9855259, ..., 0.9855259, 0.9855259,
-            0.9855259]),
+    {'depth': array([1, 1, 2, ..., 2, 1, 2]),
+     'step_size': array([1.94303615, 1.94303615, 1.94303615, ..., 1.94303615, 1.94303615,
+            1.94303615]),
      'tune': array([False, False, False, ..., False, False, False]),
-     'mean_tree_accept': array([0.78924113, 0.9360469 , 0.77989126, ..., 1.        , 0.99854255,
-            0.964025  ]),
-     'step_size_bar': array([1.24437951, 1.24437951, 1.24437951, ..., 1.24437951, 1.24437951,
-            1.24437951]),
-     'tree_size': array([3., 1., 3., ..., 1., 3., 3.]),
+     'mean_tree_accept': array([1.        , 0.72530117, 0.85098591, ..., 0.990029  , 0.98398404,
+            1.        ]),
+     'step_size_bar': array([1.44061287, 1.44061287, 1.44061287, ..., 1.44061287, 1.44061287,
+            1.44061287]),
+     'tree_size': array([1., 1., 3., ..., 3., 1., 3.]),
      'diverging': array([False, False, False, ..., False, False, False]),
-     'energy_error': array([-0.20114142,  0.        , -0.10037153, ..., -0.0670156 ,
-            -0.01411979,  0.04658692]),
-     'energy': array([2.40148835, 1.44003007, 1.81443282, ..., 1.04950205, 0.94948047,
-            1.04591942]),
-     'max_energy_error': array([ 0.50040995,  0.0660897 ,  0.465291  , ..., -0.0670156 ,
-            -0.01411979,  0.05661096]),
-     'model_logp': array([-1.22777206, -1.22777206, -1.00080207, ..., -0.95422488,
-            -0.92229584, -1.02764271])}
+     'energy_error': array([-0.04662742,  0.32116831, -0.3567352 , ..., -0.0042028 ,
+             0.0161456 , -0.0143246 ]),
+     'energy': array([1.66214065, 2.33856467, 3.0377291 , ..., 0.99966459, 0.98942996,
+            0.98859287]),
+     'max_energy_error': array([-0.04662742,  0.32116831,  0.47937797, ...,  0.01749271,
+             0.0161456 , -0.01805088]),
+     'model_logp': array([-1.40541765, -2.19018714, -1.31851043, ..., -0.94276157,
+            -0.98221307, -0.94721115])}
 
 
 
@@ -223,6 +223,7 @@ LittleMCMC exposes:
 4. `A leapfrog
    integrator <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.integration.CpuLeapfrogIntegrator.html#littlemcmc.integration.CpuLeapfrogIntegrator>`__
 
-Refer to the `API
+These modules should allow for easy experimentation with the sampler.
+Please refer to the `API
 Reference <https://littlemcmc.readthedocs.io/en/latest/api.html>`__ for
 more information.
