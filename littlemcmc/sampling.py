@@ -138,14 +138,13 @@ def sample(
         for i, seed in enumerate(random_seed)
     )
 
-    # Flatten `trace` to be 1-dimensional
-    trace = np.reshape([chain_trace for (chain_trace, _) in results], [-1])
+    # Flatten `trace` to have shape [num_variables, num_chains * num_samples]
+    trace = np.hstack([np.atleast_2d(chain_trace) for (chain_trace, _) in results])
 
     # Reshape `stats` to a dictionary
-    # TODO: we should target an ArviZ-like data structure...
     stats_ = [iter_stats for (_, chain_stats) in results for iter_stats in chain_stats]
     stats = {
-        name: np.reshape(np.array([iter_stats[name] for iter_stats in stats_]), [-1]).astype(dtype)
+        name: np.array([iter_stats[name] for iter_stats in stats_]).astype(dtype)
         for (name, dtype) in step.stats_dtypes[0].items()
     }
 
