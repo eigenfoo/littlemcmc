@@ -1,4 +1,6 @@
-# LittleMCMC (Pre-release)
+<p align="center"><img src="docs/_static/logo/default-cropped.png"></p>
+
+---
 
 ![Tests Status](https://github.com/eigenfoo/littlemcmc/workflows/tests/badge.svg)
 ![Lint Status](https://github.com/eigenfoo/littlemcmc/workflows/lint/badge.svg)
