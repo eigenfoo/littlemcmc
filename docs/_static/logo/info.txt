@@ -1,0 +1,14 @@
+
+Hope you enjoy your new logo, here are the people that
+made your beautiful logo happen :)
+font name: Montserrat-ExtraBold
+font link: https://fonts.google.com/specimen/Montserrat
+font author: Julieta Ulanovsky
+font author site: http://www.zkysky.com.ar/
+
+
+icon designer: Daniel Simon
+icon designer link: /danielsimon
+        
+{"bg":"#509FF9","icon":"#FFC096","font":"#FFC096","slogan":"#ffd4aa"}
+      
