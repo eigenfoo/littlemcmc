@@ -1,7 +1,7 @@
 .DEFAULT_GOAL = help
 
 PYTHON := python3
-PIP := pip
+PIP := pip3
 CONDA := conda
 SHELL := bash
 
@@ -29,14 +29,14 @@ conda:  # Set up a conda environment for development.
 .PHONY: venv
 venv:  # Set up a Python virtual environment for development.
 	@printf "Creating Python virtual environment...\n"
-	rm -rf venv-littlemcmc/
-	${PYTHON} -m venv venv-littlemcmc/
-	source venv-littlemcmc/bin/activate
+	rm -rf venv/
+	${PYTHON} -m venv venv/
+	source venv/bin/activate
 	${PIP} install -U pip
 	${PIP} install -r requirements.txt
 	${PIP} install -r requirements-dev.txt
 	deactivate
-	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv-littlemcmc/bin/activate\` to activate it.\033[0m\n\n\n"
+	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv/bin/activate\` to activate it.\033[0m\n\n\n"
 
 .PHONY: blackstyle
 blackstyle:
