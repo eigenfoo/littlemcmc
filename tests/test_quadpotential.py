@@ -13,8 +13,6 @@
 #  limitations under the License.
 
 import numpy as np
-import scipy.sparse
-
 from littlemcmc import quadpotential
 import pytest
 import numpy.testing as npt

@@ -18,8 +18,6 @@ import numpy.testing as npt
 import littlemcmc as lmc
 from littlemcmc import HamiltonianMC
 from test_utils import logp_dlogp_func
-import pytest
-import logging
 
 
 def test_leapfrog_reversible():
