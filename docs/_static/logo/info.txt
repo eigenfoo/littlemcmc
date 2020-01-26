@@ -1,14 +1,14 @@
 
 Hope you enjoy your new logo, here are the people that
 made your beautiful logo happen :)
-font name: clarikageo-medium
-font link: https://www.fontspring.com/fonts/the-refinery/clarika/clarika-geometric-medium
-font author: The Refinery
-font author site: https://www.refinerybrand.com/
+font name: Barlow-Black
+font link: https://fonts.google.com/specimen/Barlow
+font author: Jeremy Tribby
+font author site: https://tribby.com/
 
 
-icon designer: Daniel Simon
-icon designer link: /danielsimon
+icon designer: Leszek Pietrzak
+icon designer link: /magicznyleszek
         
-{"bg":"#132554","icon":"#00A3DD","font":"#ffffff","slogan":"#ffffff"}
+{"bg":"#156EAC","icon":"#F6575E","font":"#ffffff","slogan":"#ffffff"}
       
