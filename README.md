@@ -16,11 +16,24 @@
 
 ## Installation
 
-The latest release of LittleMCMC can be installed from PyPI:
+The latest release of LittleMCMC can be installed from PyPI using `pip`:
 
 ```bash
 pip install littlemcmc
 ```
+
+The current development branch of LittleMCMC can be installed directly from
+GitHub, also using `pip`:
+
+```bash
+pip install git+https://github.com/eigenfoo/littlemcmc.git
+```
+
+## Contributors
+
+LittleMCMC is developed by [George Ho](https://eigenfoo.xyz/). For a full list
+of contributors, please see the [GitHub contributor
+graph](https://github.com/eigenfoo/littlemcmc/graphs/contributors).
 
 ## License
 

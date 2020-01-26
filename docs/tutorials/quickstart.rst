@@ -84,53 +84,8 @@ How to Sample
         step=lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=1),
         chains=4,
         cores=1,
-        progressbar="notebook"
+        progressbar=None  # HTML progress bars don't render well in RST.
     )
-
-
-
-.. parsed-literal::
-
-    HBox(children=(FloatProgress(value=0.0, max=1500.0), HTML(value='')))
-
-
-.. parsed-literal::
-
-    
-
-
-
-.. parsed-literal::
-
-    HBox(children=(FloatProgress(value=0.0, max=1500.0), HTML(value='')))
-
-
-.. parsed-literal::
-
-    
-
-
-
-.. parsed-literal::
-
-    HBox(children=(FloatProgress(value=0.0, max=1500.0), HTML(value='')))
-
-
-.. parsed-literal::
-
-    
-
-
-
-.. parsed-literal::
-
-    HBox(children=(FloatProgress(value=0.0, max=1500.0), HTML(value='')))
-
-
-.. parsed-literal::
-
-    
-
 
 Inspecting the Output of ``lmc.sample``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,8 +99,8 @@ Inspecting the Output of ``lmc.sample``
 
 .. parsed-literal::
 
-    array([[ 0.98638645,  1.594521  ,  0.89394842, ...,  0.21827979,
-             0.35573737, -0.23779242]])
+    array([[-0.15004566, -0.46170896, -0.19921587, ..., -0.83863543,
+            -0.21860966,  1.19312616]])
 
 
 
@@ -171,24 +126,24 @@ Inspecting the Output of ``lmc.sample``
 
 .. parsed-literal::
 
-    {'depth': array([1, 1, 2, ..., 2, 1, 2]),
-     'step_size': array([1.94303615, 1.94303615, 1.94303615, ..., 1.94303615, 1.94303615,
-            1.94303615]),
+    {'depth': array([2, 1, 1, ..., 2, 2, 2]),
+     'step_size': array([2.05084533, 2.05084533, 2.05084533, ..., 2.05084533, 2.05084533,
+            2.05084533]),
      'tune': array([False, False, False, ..., False, False, False]),
-     'mean_tree_accept': array([1.        , 0.72530117, 0.85098591, ..., 0.990029  , 0.98398404,
-            1.        ]),
-     'step_size_bar': array([1.44061287, 1.44061287, 1.44061287, ..., 1.44061287, 1.44061287,
-            1.44061287]),
-     'tree_size': array([1., 1., 3., ..., 3., 1., 3.]),
+     'mean_tree_accept': array([0.98804566, 0.96665999, 1.        , ..., 0.71715969, 1.        ,
+            0.82667303]),
+     'step_size_bar': array([1.38939851, 1.38939851, 1.38939851, ..., 1.38939851, 1.38939851,
+            1.38939851]),
+     'tree_size': array([3., 1., 1., ..., 3., 3., 3.]),
      'diverging': array([False, False, False, ..., False, False, False]),
-     'energy_error': array([-0.04662742,  0.32116831, -0.3567352 , ..., -0.0042028 ,
-             0.0161456 , -0.0143246 ]),
-     'energy': array([1.66214065, 2.33856467, 3.0377291 , ..., 0.99966459, 0.98942996,
-            0.98859287]),
-     'max_energy_error': array([-0.04662742,  0.32116831,  0.47937797, ...,  0.01749271,
-             0.0161456 , -0.01805088]),
-     'model_logp': array([-1.40541765, -2.19018714, -1.31851043, ..., -0.94276157,
-            -0.98221307, -0.94721115])}
+     'energy_error': array([ 2.32073322e-04,  3.39084572e-02, -3.08542532e-02, ...,
+             2.22621388e-02, -1.16581736e-01,  2.44673926e-01]),
+     'energy': array([0.98408598, 1.02562518, 0.99620082, ..., 2.83266304, 1.15420445,
+            1.74209033]),
+     'max_energy_error': array([ 0.01815012,  0.03390846, -0.03085425, ...,  0.54999299,
+            -0.11658174,  0.30105821]),
+     'model_logp': array([-0.93019538, -1.02552611, -0.93878201, ..., -1.27059323,
+            -0.94283363, -1.63071355])}
 
 
 
@@ -210,18 +165,18 @@ Other Modules
 
 LittleMCMC exposes:
 
-1. Two step methods: `Hamiltonian Monte Carlo
-   (HMC) <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.HamiltonianMC.html#littlemcmc.HamiltonianMC>`__
-   and the `No-U-Turn Sampler
-   (NUTS) <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.NUTS.html#littlemcmc.NUTS>`__.
-2. Classes for various
-   `quadpotentials <https://littlemcmc.readthedocs.io/en/latest/api.html#quadpotentials-a-k-a-mass-matrices>`__
-   (a.k.a. mass matrices or inverse metrics) and mass matrix adaptation
-   routines
-3. A class for `dual-averaging step size
-   adaptation <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.step_sizes.DualAverageAdaptation.html#littlemcmc.step_sizes.DualAverageAdaptation>`__
-4. `A leapfrog
-   integrator <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.integration.CpuLeapfrogIntegrator.html#littlemcmc.integration.CpuLeapfrogIntegrator>`__
+1. Two step methods (a.k.a. samplers): ```littlemcmc.HamiltonianMC``
+   (Hamiltonian Monte
+   Carlo) <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.HamiltonianMC.html#littlemcmc.HamiltonianMC>`__
+   and the ```littlemcmc.NUTS`` (No-U-Turn
+   Sampler) <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.NUTS.html#littlemcmc.NUTS>`__
+2. Various quadpotentials (a.k.a. mass matrices or inverse metrics) in
+   ```littlemcmc.quadpotential`` <https://littlemcmc.readthedocs.io/en/latest/api.html#quadpotentials-a-k-a-mass-matrices>`__,
+   along with mass matrix adaptation routines
+3. Dual-averaging step size adaptation in
+   ```littlemcmc.step_sizes`` <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.step_sizes.DualAverageAdaptation.html#littlemcmc.step_sizes.DualAverageAdaptation>`__
+4. A leapfrog integrator in
+   ```littlemcmc.integration`` <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.integration.CpuLeapfrogIntegrator.html#littlemcmc.integration.CpuLeapfrogIntegrator>`__
 
 These modules should allow for easy experimentation with the sampler.
 Please refer to the `API
