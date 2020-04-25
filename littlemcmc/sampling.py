@@ -75,19 +75,86 @@ def _sample_one_chain(
 def sample(
     logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
     size: int,
-    draws: int,
-    tune: int,
+    draws: int = 1000,
+    tune: int = 1000,
     step=None,
     init: str = "auto",
     chains: Optional[int] = None,
     cores: Optional[int] = None,
     start: Optional[np.ndarray] = None,
+    progressbar: Union[bool, str] = True,
     random_seed: Optional[Union[int, List[int]]] = None,
     discard_tuned_samples: bool = True,
-    progressbar: Union[bool, str] = True,
     **kwargs,
 ):
-    """Sample."""
+    """
+    Draw samples from the posterior using the given step methods.
+    Multiple step methods are supported via compound step methods.
+
+    Parameters
+    ----------
+    logp_dlogp_func: Pythong callable
+    size: int
+    draws: int
+        The number of samples to draw. Defaults to 1000. The number of tuned samples are
+        discarded by default. See ``discard_tuned_samples``.
+    tune: int
+        Number of iterations to tune, defaults to 1000. Samplers adjust the step sizes,
+        scalings or similar during tuning. Tuning samples will be drawn in addition to
+        the number specified in the ``draws`` argument, and will be discarded unless
+        ``discard_tuned_samples`` is set to False.
+    step: function
+        A step function. By default the NUTS step method will be used.
+    init: str
+        Initialization method to use for auto-assigned NUTS samplers.
+        * auto: Choose a default initialization method automatically. Currently, this is
+          ``jitter+adapt_diag``, but this can change in the future. If you depend on the
+          exact behaviour, choose an initialization method explicitly.
+        * adapt_diag: Start with a identity mass matrix and then adapt a diagonal based
+          on the variance of the tuning samples.
+        * jitter+adapt_diag: Same as ``adapt_diag``, but add uniform jitter in [-1, 1]
+          to the starting point in each chain.
+        * adapt_full: Same as `'adapt_diag'`, but adapt a dense mass matrix using the
+          sample covariances.
+    chains: int
+        The number of chains to sample. Running independent chains is important for some
+        convergence statistics and can also reveal multiple modes in the posterior. If
+        ``None``, then set to either ``cores`` or 2, whichever is larger.
+    cores: int
+        The number of chains to run in parallel. If ``None``, set to the number of CPUs
+        in the system, but at most 4.
+    start: dict, or array of dict
+        Starting point in parameter space. Initialization methods for NUTS (see ``init``
+        keyword) can overwrite the default.
+    progressbar: bool, optional default=True
+        Whether or not to display a progress bar in the command line. The bar shows the
+        percentage of completion, the sampling speed in samples per second (SPS), and
+        the estimated remaining time until completion ("expected time of arrival"; ETA).
+    random_seed: int or list of ints
+        A list is accepted if ``cores`` is greater than one.
+    discard_tuned_samples: bool
+        Whether to discard posterior samples of the tune interval.
+
+    Returns
+    -------
+    trace: np.array
+        An array that contains the samples.
+    stats: dict
+        A dictionary that contains sampler statistics.
+
+    Notes
+    -----
+    Optional keyword arguments can be passed to ``sample`` to be delivered to the
+    ``step_method``s used during sampling. In particular, the NUTS step method accepts a
+    number of arguments. Common options are:
+        * target_accept: float in [0, 1]. The step size is tuned such that we approximate this
+          acceptance rate. Higher values like 0.9 or 0.95 often work better for problematic
+          posteriors.
+        * max_treedepth: The maximum depth of the trajectory tree.
+        * step_scale: float, default 0.25
+          The initial guess for the step size scaled down by :math:`1/n**(1/4)`
+    You can find a full list of arguments in the docstring of the step methods.
+    """
     if cores is None:
         cores = min(4, os.cpu_count())
     if chains is None:
@@ -174,11 +241,12 @@ def init_nuts(
           Currently, this is `'jitter+adapt_diag'`, but this can change in the
           future. If you depend on the exact behaviour, choose an initialization
           method explicitly.
-        * adapt_diag : Start with a identity mass matrix and then adapt a
-          diagonal based on the variance of the tuning samples. Uses the test
-          value (usually the prior mean) as starting point.
-        * jitter+adapt_diag : Same as `'adapt_diag'`, but use uniform jitter in
-          [-1, 1] as starting point in each chain.
+        * adapt_diag : Start with a identity mass matrix and then adapt a diagonal based
+          on the variance of the tuning samples.
+        * jitter+adapt_diag : Same as `'adapt_diag'`, but use uniform jitter in [-1, 1]
+          as starting point in each chain.
+        * adapt_full: Sample as `'adapt_diag'`, but adapts a dense mass matrix using the
+          sample covariances.
     **kwargs: keyword arguments
         Extra keyword arguments are forwarded to littlemcmc.NUTS.
 
