@@ -1,4 +1,5 @@
 black
+jupyter
 mypy
 pydocstyle
 pylint
