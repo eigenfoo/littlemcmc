@@ -1,0 +1,14 @@
+name: check-for-pymc3-commits
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    # Every day at 1pm UTC (9am EST)
+    - cron:  '0 13 * * *'
+
+jobs:
+  check-for-pymc3-commits:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check for commits to the pymc3/step_methods/ directory
+      run: bash scripts/check-for-pymc3-commits.sh
