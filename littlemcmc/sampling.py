@@ -33,34 +33,21 @@ def _sample_one_chain(
     size: int,
     draws: int,
     tune: int,
-    step=None,
-    init: str = "auto",
-    start: Optional[np.ndarray] = None,
+    step,
+    start: np.ndarray,
     random_seed: Union[None, int, List[int]] = None,
     discard_tuned_samples: bool = True,
     progressbar: Union[bool, str] = True,
     progressbar_position: Optional[int] = None,
-    **kwargs,
 ):
     """Sample one chain in one process."""
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    start_, step_ = init_nuts(
-        logp_dlogp_func=logp_dlogp_func, size=size, init=init, random_seed=random_seed, **kwargs,
-    )
-
-    if start is not None:
-        q = start
-    else:
-        q = start_
-
-    if step is None:
-        step = step_
-
     if progressbar_position is None:
         progressbar_position = 0
 
+    q = start
     trace = np.zeros([size, tune + draws])
     stats: List[SamplerWarning] = []
 
@@ -91,12 +78,14 @@ def sample(
     draws: int,
     tune: int,
     step=None,
+    init: str = "auto",
     chains: Optional[int] = None,
     cores: Optional[int] = None,
     start: Optional[np.ndarray] = None,
     random_seed: Optional[Union[int, List[int]]] = None,
     discard_tuned_samples: bool = True,
     progressbar: Union[bool, str] = True,
+    **kwargs,
 ):
     """Sample."""
     if cores is None:
@@ -120,6 +109,19 @@ def sample(
     elif draws < 500:
         msg = "Only {} samples in chain.".format(draws)
         _log.warning(msg)
+
+    if step is None or start is None:
+        start_, step_ = init_nuts(
+            logp_dlogp_func=logp_dlogp_func,
+            size=size,
+            init=init,
+            random_seed=random_seed,
+            **kwargs,
+        )
+        if step is None:
+            step = step_
+        if start is None:
+            start = start_
 
     _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
     results = Parallel(n_jobs=cores, backend="multiprocessing")(
