@@ -22,7 +22,7 @@ from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm, tqdm_notebook
 from .nuts import NUTS
-from .quadpotential import QuadPotentialDiagAdapt
+from .quadpotential import QuadPotentialDiagAdapt, QuadPotentialFullAdapt
 from .report import SamplerWarning
 
 _log = logging.getLogger("littlemcmc")
@@ -214,6 +214,11 @@ def init_nuts(
         mean = start
         var = np.ones(size)
         potential = QuadPotentialDiagAdapt(size, mean, var, 10)
+    elif init == "adapt_full":
+        start = np.zeros(size)
+        mean = start
+        cov = np.ones(size)
+        potential = QuadPotentialFullAdapt(model.ndim, mean, cov, 10)
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 
