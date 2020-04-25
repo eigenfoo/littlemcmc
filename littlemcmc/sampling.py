@@ -22,7 +22,8 @@ from joblib import Parallel, delayed
 import numpy as np
 from tqdm import tqdm, tqdm_notebook
 from .nuts import NUTS
-from .quadpotential import QuadPotentialDiagAdapt, QuadPotentialFullAdapt
+from .hmc import HamiltonianMC
+from .quadpotential import QuadPotential, QuadPotentialDiagAdapt, QuadPotentialFullAdapt
 from .report import SamplerWarning
 
 _log = logging.getLogger("littlemcmc")
@@ -33,7 +34,7 @@ def _sample_one_chain(
     size: int,
     draws: int,
     tune: int,
-    step,
+    step: Union[NUTS, HamiltonianMC],
     start: np.ndarray,
     random_seed: Union[None, int, List[int]] = None,
     discard_tuned_samples: bool = True,
@@ -77,7 +78,7 @@ def sample(
     size: int,
     draws: int = 1000,
     tune: int = 1000,
-    step=None,
+    step: Union[NUTS, HamiltonianMC] = None,
     init: str = "auto",
     chains: Optional[int] = None,
     cores: Optional[int] = None,
@@ -89,7 +90,6 @@ def sample(
 ):
     """
     Draw samples from the posterior using the given step methods.
-    Multiple step methods are supported via compound step methods.
 
     Parameters
     ----------
@@ -254,7 +254,7 @@ def init_nuts(
     -------
     start: np.array
         Starting point for sampler.
-    nuts_sampler: pymc3.step_methods.NUTS
+    nuts_sampler: NUTS
         Instantiated and initialized NUTS sampler object.
     """
     if not isinstance(init, str):
@@ -276,7 +276,7 @@ def init_nuts(
         start = np.zeros(size)
         mean = start
         var = np.ones(size)
-        potential = QuadPotentialDiagAdapt(size, mean, var, 10)
+        potential: QuadPotential = QuadPotentialDiagAdapt(size, mean, var, 10)
     elif init == "jitter+adapt_diag":
         start = 2 * np.random.rand(size) - 1
         mean = start
@@ -286,7 +286,7 @@ def init_nuts(
         start = np.zeros(size)
         mean = start
         cov = np.ones(size)
-        potential = QuadPotentialFullAdapt(model.ndim, mean, cov, 10)
+        potential = QuadPotentialFullAdapt(size, mean, cov, 10)
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 
