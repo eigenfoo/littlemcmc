@@ -10,5 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check for commits to the pymc3/step_methods/ directory
-      run: |
-        bash ./scripts/check-for-pymc3-commits.sh
+      run: ./scripts/check-for-pymc3-commits.sh
