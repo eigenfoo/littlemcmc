@@ -11,5 +11,4 @@ jobs:
     steps:
     - name: Check for commits to the pymc3/step_methods/ directory
       run: |
-        ls
-        bash scripts/check-for-pymc3-commits.sh
+        bash ./scripts/check-for-pymc3-commits.sh
