@@ -1,13 +1,15 @@
 name: even-with-pymc3
 
-on:
-  schedule:
+on: [push]
+#  schedule:
     # Every day at 1pm UTC (9am EST)
-    - cron:  '0 13 * * *'
+    #  - cron:  '0 13 * * *'
 
 jobs:
   even-with-pymc3:
     runs-on: ubuntu-latest
     steps:
     - name: Check for commits to the pymc3/step_methods/ directory
-      run: bash scripts/check-for-pymc3-commits.sh
+      run: |
+        ls
+        bash scripts/check-for-pymc3-commits.sh
