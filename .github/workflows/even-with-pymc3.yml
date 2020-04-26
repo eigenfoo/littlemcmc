@@ -1,14 +1,21 @@
 name: even-with-pymc3
 
 on: [push]
-#  schedule:
-    # Every day at 1pm UTC (9am EST)
-    #  - cron:  '0 13 * * *'
+    #  schedule:
+    #    # Every day at 1pm UTC (9am EST)
+    #    - cron:  '0 13 * * *'
 
 jobs:
   even-with-pymc3:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Check for commits to the pymc3/step_methods/ directory
+    - uses: actions/checkout@v2
+    - name: Check for commits to the pymc3/step_methods/hmc/ directory
       run: ./scripts/check-for-pymc3-commits.sh
+    - name: Create issue if there are new commits
+      uses: JasonEtco/create-an-issue@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        filename: .github/ISSUE_TEMPLATE/new-commits-to-pymc3.md
+      if: failure()
