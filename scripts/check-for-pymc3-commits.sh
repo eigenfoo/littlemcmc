@@ -5,7 +5,7 @@ set -e
 
 git clone https://github.com/pymc-devs/pymc3.git
 cd pymc3/
-num_commits=$(git log --since="1 day ago" pymc3/step_methods/hmc/ | grep "commit" | wc -l)
+num_commits=$(git log --since="3 months ago" pymc3/step_methods/hmc/ | grep "commit" | wc -l)
 
 if [ "$num_commits" -eq "0" ]; then
     echo "No commits since yesterday. Passing."
