@@ -35,3 +35,4 @@ LittleMCMC
    install
    tutorials/quickstart
    api
+   developer_guide
