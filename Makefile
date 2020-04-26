@@ -85,7 +85,7 @@ clean:  # Clean project directories.
 	${MAKE} -C docs/ clean
 
 .PHONY: package
-package: clean  # Package glaze in preparation for releasing to PyPI.
+package: clean  # Package littlemcmc in preparation for releasing to PyPI.
 	${PYTHON} setup.py sdist bdist_wheel
 	twine check dist/*
 	@printf "\n\n\033[1;34mTo upload to Test PyPI (recommended!), run:\033[0m\n\n"
