@@ -93,8 +93,11 @@ def sample(
 
     Parameters
     ----------
-    logp_dlogp_func: Pythong callable
+    logp_dlogp_func: Python callable
+        Python callable that returns a tuple of the model joint log probability and its
+        derivative, in that order.
     size: int
+        The number of parameters of the model.
     draws: int
         The number of samples to draw. Defaults to 1000. The number of tuned samples are
         discarded by default. See ``discard_tuned_samples``.
@@ -107,15 +110,15 @@ def sample(
         A step function. By default the NUTS step method will be used.
     init: str
         Initialization method to use for auto-assigned NUTS samplers.
-        * auto: Choose a default initialization method automatically. Currently, this is
-          ``jitter+adapt_diag``, but this can change in the future. If you depend on the
-          exact behaviour, choose an initialization method explicitly.
-        * adapt_diag: Start with a identity mass matrix and then adapt a diagonal based
-          on the variance of the tuning samples.
-        * jitter+adapt_diag: Same as ``adapt_diag``, but add uniform jitter in [-1, 1]
-          to the starting point in each chain.
-        * adapt_full: Same as `'adapt_diag'`, but adapt a dense mass matrix using the
-          sample covariances.
+            * auto: Choose a default initialization method automatically. Currently,
+              this is ``jitter+adapt_diag``, but this can change in the future. If you
+              depend on the exact behaviour, choose an initialization method explicitly.
+            * adapt_diag: Start with a identity mass matrix and then adapt a diagonal
+              based on the variance of the tuning samples.
+            * jitter+adapt_diag: Same as ``adapt_diag``, but add uniform jitter in
+              [-1, 1] to the starting point in each chain.
+            * adapt_full: Same as `'adapt_diag'`, but adapt a dense mass matrix using
+              the sample covariances.
     chains: int
         The number of chains to sample. Running independent chains is important for some
         convergence statistics and can also reveal multiple modes in the posterior. If
@@ -146,14 +149,14 @@ def sample(
     -----
     Optional keyword arguments can be passed to ``sample`` to be delivered to the
     ``step_method``s used during sampling. In particular, the NUTS step method accepts a
-    number of arguments. Common options are:
-        * target_accept: float in [0, 1]. The step size is tuned such that we approximate this
-          acceptance rate. Higher values like 0.9 or 0.95 often work better for problematic
-          posteriors.
+    number of arguments. You can find a full list of arguments in the docstring of the
+    step methods. Common options are:
+        * target_accept: float in [0, 1]. The step size is tuned such that we
+          approximate this acceptance rate. Higher values like 0.9 or 0.95 often work
+          better for problematic posteriors.
         * max_treedepth: The maximum depth of the trajectory tree.
-        * step_scale: float, default 0.25
-          The initial guess for the step size scaled down by :math:`1/n**(1/4)`
-    You can find a full list of arguments in the docstring of the step methods.
+        * step_scale: float, default 0.25. The initial guess for the step size scaled
+        down by :math:`1/n**(1/4)`.
     """
     if cores is None:
         cores = min(4, os.cpu_count())
