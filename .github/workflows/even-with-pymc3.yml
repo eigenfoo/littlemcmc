@@ -1,9 +1,9 @@
 name: even-with-pymc3
 
-on: [push]
-    #  schedule:
-    #    # Every day at 1pm UTC (9am EST)
-    #    - cron:  '0 13 * * *'
+on:
+  schedule:
+    # Every day at 1pm UTC (9am EST)
+    - cron:  '0 13 * * *'
 
 jobs:
   even-with-pymc3:
