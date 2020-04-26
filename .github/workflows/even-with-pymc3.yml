@@ -9,5 +9,6 @@ jobs:
   even-with-pymc3:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v1
     - name: Check for commits to the pymc3/step_methods/ directory
       run: ./scripts/check-for-pymc3-commits.sh
