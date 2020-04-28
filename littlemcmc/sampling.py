@@ -288,7 +288,7 @@ def init_nuts(
     elif init == "adapt_full":
         start = np.zeros(size)
         mean = start
-        cov = np.ones(size)
+        cov = np.eye(size)
         potential = QuadPotentialFullAdapt(size, mean, cov, 10)
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
