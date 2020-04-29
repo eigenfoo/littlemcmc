@@ -292,7 +292,7 @@ def init_nuts(
         mean = start
         cov = np.eye(size)
         potential = QuadPotentialFullAdapt(size, mean, cov, 10)
-    elif init == 'jitter+adapt_full':
+    elif init == "jitter+adapt_full":
         start = 2 * np.random.rand(size) - 1
         mean = start
         cov = np.eye(size)
