@@ -13,17 +13,19 @@
 #  limitations under the License.
 
 import numpy as np
+import pytest
 import littlemcmc as lmc
 from test_utils import logp_dlogp_func
 
 
-def test_init_nuts():
-    size = 1
-    init = "auto"
-    random_seed = 42
-    foo = lmc.init_nuts(
-        logp_dlogp_func=logp_dlogp_func, size=size, init=init, random_seed=random_seed,
-    )
+@pytest.mark.parametrize(
+    "method", ["adapt_diag", "jitter+adapt_diag", "adapt_full", "jitter+adapt_full",],
+)
+def test_init_nuts(method):
+    start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, size=1, init=method)
+    assert isinstance(start, np.ndarray)
+    assert len(start) == 1
+    assert isinstance(step, lmc.NUTS)
 
 
 def test_hmc_sampling_runs():

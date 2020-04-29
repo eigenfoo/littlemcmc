@@ -248,8 +248,10 @@ def init_nuts(
           on the variance of the tuning samples.
         * jitter+adapt_diag : Same as `'adapt_diag'`, but use uniform jitter in [-1, 1]
           as starting point in each chain.
-        * adapt_full: Sample as `'adapt_diag'`, but adapts a dense mass matrix using the
+        * adapt_full: Same as `'adapt_diag'`, but adapts a dense mass matrix using the
           sample covariances.
+        * jitter+adapt_full: Same as `'adapt_full'`, but use uniform jitter in [-1, 1]
+          as starting point in each chain.
     **kwargs: keyword arguments
         Extra keyword arguments are forwarded to littlemcmc.NUTS.
 
@@ -287,6 +289,11 @@ def init_nuts(
         potential = QuadPotentialDiagAdapt(size, mean, var, 10)
     elif init == "adapt_full":
         start = np.zeros(size)
+        mean = start
+        cov = np.eye(size)
+        potential = QuadPotentialFullAdapt(size, mean, cov, 10)
+    elif init == "jitter+adapt_full":
+        start = 2 * np.random.rand(size) - 1
         mean = start
         cov = np.eye(size)
         potential = QuadPotentialFullAdapt(size, mean, cov, 10)
