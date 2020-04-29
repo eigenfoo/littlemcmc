@@ -1,0 +1,4 @@
+[run]
+omit =
+    # Exclude tests files from coverage calculation
+    littlemcmc/tests/test_*.py
