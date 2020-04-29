@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 import numpy as np
+import pytest
 import littlemcmc as lmc
 from test_utils import logp_dlogp_func
 
@@ -28,27 +29,9 @@ from test_utils import logp_dlogp_func
 )
 def test_init_nuts(method):
     start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, size=1, init=method)
-
-    breakpoint()
-
-    assert isinstance(start, list)
+    assert isinstance(start, np.ndarray)
     assert len(start) == 1
-    assert isinstance(start[0], dict)
-    assert "a" in start[0] and "b_log__" in start[0]
-    start, _ = pm.init_nuts(init=method, n_init=10, chains=2)
-    assert isinstance(start, list)
-    assert len(start) == 2
-    assert isinstance(start[0], dict)
-    assert "a" in start[0] and "b_log__" in start[0]
-
-
-def test_init_nuts():
-    size = 1
-    init = "auto"
-    random_seed = 42
-    foo = lmc.init_nuts(
-        logp_dlogp_func=logp_dlogp_func, size=size, init=init, random_seed=random_seed,
-    )
+    assert isinstance(step, lmc.NUTS)
 
 
 def test_hmc_sampling_runs():
