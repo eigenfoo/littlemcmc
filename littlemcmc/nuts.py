@@ -109,7 +109,7 @@ class NUTS(BaseHMC):
     def __init__(
         self,
         logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
-        size: int,
+        model_ndim: int,
         scaling: Optional[np.ndarray] = None,
         is_cov: bool = False,
         potential=None,
@@ -132,7 +132,7 @@ class NUTS(BaseHMC):
         logp_dlogp_func : Python callable
             Python callable that returns the log-probability and derivative of
             the log-probability, respectively.
-        size : int
+        model_ndim : int
             Total number of parameters. Dimensionality of the output of
             ``logp_dlogp_func``.
         scaling : 1 or 2-dimensional array-like
@@ -188,7 +188,7 @@ class NUTS(BaseHMC):
         """
         super(NUTS, self).__init__(
             logp_dlogp_func=logp_dlogp_func,
-            size=size,
+            model_ndim=model_ndim,
             scaling=scaling,
             is_cov=is_cov,
             potential=potential,
