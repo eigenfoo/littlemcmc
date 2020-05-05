@@ -300,6 +300,8 @@ def init_nuts(
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 
-    step = NUTS(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim, potential=potential, **kwargs)
+    step = NUTS(
+        logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim, potential=potential, **kwargs
+    )
 
     return start, step
