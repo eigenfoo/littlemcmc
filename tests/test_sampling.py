@@ -22,59 +22,59 @@ from test_utils import logp_dlogp_func
     "method", ["adapt_diag", "jitter+adapt_diag", "adapt_full", "jitter+adapt_full",],
 )
 def test_init_nuts(method):
-    start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, size=1, init=method)
+    start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, model_ndim=1, init=method)
     assert isinstance(start, np.ndarray)
     assert len(start) == 1
     assert isinstance(step, lmc.NUTS)
 
 
 def test_hmc_sampling_runs():
-    size = 1
-    step = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size)
+    model_ndim = 1
+    step = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim)
     draws = 2
     tune = 1
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
+        logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
     assert trace.shape == (1, 2)
 
 
 def test_nuts_sampling_runs():
-    size = 1
-    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
+    model_ndim = 1
+    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim)
     draws = 2
     tune = 1
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
+        logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
     assert trace.shape == (1, 2)
 
 
 def test_multiprocess_sampling_runs():
-    size = 1
-    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
+    model_ndim = 1
+    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim)
     draws = 1
     tune = 1
     chains = None
     cores = None
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
+        logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
 
 
 def test_hmc_recovers_1d_normal():
-    size = 1
-    step = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size)
+    model_ndim = 1
+    step = lmc.HamiltonianMC(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim)
     draws = 1000
     tune = 1000
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
+        logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
 
     assert np.allclose(np.mean(trace), 0, atol=1)
@@ -82,14 +82,14 @@ def test_hmc_recovers_1d_normal():
 
 
 def test_nuts_recovers_1d_normal():
-    size = 1
-    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
+    model_ndim = 1
+    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim)
     draws = 1000
     tune = 1000
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
+        logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
 
     assert np.allclose(np.mean(trace), 0, atol=1)

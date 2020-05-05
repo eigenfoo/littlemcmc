@@ -22,11 +22,11 @@ from test_utils import logp_dlogp_func
 
 def test_leapfrog_reversible():
     np.random.seed(42)
-    size = 1
-    scaling = np.random.rand(size)
-    step = HamiltonianMC(logp_dlogp_func=logp_dlogp_func, size=size, scaling=scaling)
+    model_ndim = 1
+    scaling = np.random.rand(model_ndim)
+    step = HamiltonianMC(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim, scaling=scaling)
     p = step.potential.random()
-    q = np.random.randn(size)
+    q = np.random.randn(model_ndim)
     start = step.integrator.compute_state(p, q)
 
     for epsilon in [0.01, 0.1]:
@@ -41,14 +41,14 @@ def test_leapfrog_reversible():
 
 
 def test_nuts_tuning():
-    size = 1
+    model_ndim = 1
     draws = 5
     tune = 5
-    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=size)
+    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim)
     chains = 1
     cores = 1
     trace, stats = lmc.sample(
-        logp_dlogp_func, size, draws, tune, step=step, chains=chains, cores=cores
+        logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
 
     assert not step.tune
