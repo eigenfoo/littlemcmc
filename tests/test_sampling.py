@@ -35,10 +35,20 @@ def test_hmc_sampling_runs():
     tune = 1
     chains = 2
     cores = 1
+
+    expected_shape = (2, 3, 1)
+
     trace, stats = lmc.sample(
         logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
-    assert trace.shape == (2, 3, 1)
+    assert trace.shape == expected_shape
+    assert all([stats[name].shape == expected_shape for (name, _) in step.stats_dtypes[0].items()])
+    assert all(
+        [
+            stats[name].dtype == expected_dtype
+            for (name, expected_dtype) in step.stats_dtypes[0].items()
+        ]
+    )
 
 
 def test_nuts_sampling_runs():
@@ -48,10 +58,20 @@ def test_nuts_sampling_runs():
     tune = 1
     chains = 2
     cores = 1
+
+    expected_shape = (2, 3, 1)
+
     trace, stats = lmc.sample(
         logp_dlogp_func, model_ndim, draws, tune, step=step, chains=chains, cores=cores
     )
     assert trace.shape == (2, 3, 1)
+    assert all([stats[name].shape == expected_shape for (name, _) in step.stats_dtypes[0].items()])
+    assert all(
+        [
+            stats[name].dtype == expected_dtype
+            for (name, expected_dtype) in step.stats_dtypes[0].items()
+        ]
+    )
 
 
 def test_multiprocess_sampling_runs():
