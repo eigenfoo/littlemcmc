@@ -31,7 +31,7 @@ _log = logging.getLogger("littlemcmc")
 
 def _sample_one_chain(
     logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
-    size: int,
+    model_ndim: int,
     draws: int,
     tune: int,
     step: Union[NUTS, HamiltonianMC],
@@ -49,7 +49,7 @@ def _sample_one_chain(
         progressbar_position = 0
 
     q = start
-    trace = np.zeros([size, tune + draws])
+    trace = np.zeros([model_ndim, tune + draws])
     stats: List[SamplerWarning] = []
 
     if progressbar == "notebook":
@@ -75,7 +75,7 @@ def _sample_one_chain(
 
 def sample(
     logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
-    size: int,
+    model_ndim: int,
     draws: int = 1000,
     tune: int = 1000,
     step: Union[NUTS, HamiltonianMC] = None,
@@ -96,7 +96,7 @@ def sample(
     logp_dlogp_func: Python callable
         Python callable that returns a tuple of the model joint log probability and its
         derivative, in that order.
-    size: int
+    model_ndim: int
         The number of parameters of the model.
     draws: int
         The number of samples to draw. Defaults to 1000. The number of tuned samples are
@@ -183,7 +183,7 @@ def sample(
     if step is None or start is None:
         start_, step_ = init_nuts(
             logp_dlogp_func=logp_dlogp_func,
-            size=size,
+            model_ndim=model_ndim,
             init=init,
             random_seed=random_seed,
             **kwargs,
@@ -197,7 +197,7 @@ def sample(
     results = Parallel(n_jobs=cores, backend="multiprocessing")(
         delayed(_sample_one_chain)(
             logp_dlogp_func=logp_dlogp_func,
-            size=size,
+            model_ndim=model_ndim,
             draws=draws,
             tune=tune,
             step=step,
@@ -225,7 +225,7 @@ def sample(
 
 def init_nuts(
     logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
-    size: int,
+    model_ndim: int,
     init: str = "auto",
     random_seed: Union[None, int, List[int]] = None,
     **kwargs,
@@ -278,28 +278,30 @@ def init_nuts(
         np.random.seed(random_seed)
 
     if init == "adapt_diag":
-        start = np.zeros(size)
+        start = np.zeros(model_ndim)
         mean = start
-        var = np.ones(size)
-        potential: QuadPotential = QuadPotentialDiagAdapt(size, mean, var, 10)
+        var = np.ones(model_ndim)
+        potential: QuadPotential = QuadPotentialDiagAdapt(model_ndim, mean, var, 10)
     elif init == "jitter+adapt_diag":
-        start = 2 * np.random.rand(size) - 1
+        start = 2 * np.random.rand(model_ndim) - 1
         mean = start
-        var = np.ones(size)
-        potential = QuadPotentialDiagAdapt(size, mean, var, 10)
+        var = np.ones(model_ndim)
+        potential = QuadPotentialDiagAdapt(model_ndim, mean, var, 10)
     elif init == "adapt_full":
-        start = np.zeros(size)
+        start = np.zeros(model_ndim)
         mean = start
-        cov = np.eye(size)
-        potential = QuadPotentialFullAdapt(size, mean, cov, 10)
+        cov = np.eye(model_ndim)
+        potential = QuadPotentialFullAdapt(model_ndim, mean, cov, 10)
     elif init == "jitter+adapt_full":
-        start = 2 * np.random.rand(size) - 1
+        start = 2 * np.random.rand(model_ndim) - 1
         mean = start
-        cov = np.eye(size)
-        potential = QuadPotentialFullAdapt(size, mean, cov, 10)
+        cov = np.eye(model_ndim)
+        potential = QuadPotentialFullAdapt(model_ndim, mean, cov, 10)
     else:
         raise ValueError("Unknown initializer: {}.".format(init))
 
-    step = NUTS(logp_dlogp_func=logp_dlogp_func, size=size, potential=potential, **kwargs)
+    step = NUTS(
+        logp_dlogp_func=logp_dlogp_func, model_ndim=model_ndim, potential=potential, **kwargs
+    )
 
     return start, step

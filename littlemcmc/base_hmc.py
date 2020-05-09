@@ -32,7 +32,7 @@ class BaseHMC:
     def __init__(
         self,
         logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
-        size: int,
+        model_ndim: int,
         scaling: Optional[np.ndarray],
         is_cov: bool,
         potential: QuadPotential,
@@ -52,7 +52,7 @@ class BaseHMC:
         logp_dlogp_func : Python callable
             Python callable that returns the log-probability and derivative of
             the log-probability, respectively.
-        size : int
+        model_ndim : int
             Total number of parameters. Dimensionality of the output of
             ``logp_dlogp_func``.
         scaling : 1 or 2-dimensional array-like
@@ -98,8 +98,8 @@ class BaseHMC:
         self.adapt_step_size = adapt_step_size
         self.Emax = Emax
         self.iter_count = 0
-        self.size = size
-        self.step_size = step_scale / (size ** 0.25)
+        self.model_ndim = model_ndim
+        self.step_size = step_scale / (model_ndim ** 0.25)
         self.target_accept = target_accept
         self.step_adapt = step_sizes.DualAverageAdaptation(
             self.step_size, target_accept, gamma, k, t0
@@ -108,9 +108,9 @@ class BaseHMC:
 
         if scaling is None and potential is None:
             # Default to diagonal quadpotential
-            mean = np.zeros(size)
-            var = np.ones(size)
-            potential = QuadPotentialDiagAdapt(size, mean, var, 10)
+            mean = np.zeros(model_ndim)
+            var = np.ones(model_ndim)
+            potential = QuadPotentialDiagAdapt(model_ndim, mean, var, 10)
 
         if scaling is not None and potential is not None:
             raise ValueError("Cannot specify both `potential` and `scaling`.")
