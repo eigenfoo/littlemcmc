@@ -22,6 +22,8 @@ Table of Contents
    -  `Inspecting the Output of
       lmc.sample <#inspecting-the-output-of-lmc-sample>`__
 
+-  `Customizing the Default NUTS
+   Sampler <#customizing-the-default-nuts-sampler>`__
 -  `Other Modules <#other-modules>`__
 
 Who should use LittleMCMC?
@@ -34,11 +36,15 @@ with better strength of support and quality of documentation.
 
 There are two expected use cases for LittleMCMC. Firstly, if you:
 
-1. Have model with only continuous parameters,
+1. Have a model with only continuous parameters,
 2. Are willing to manually transform all of your model’s parameters to
    the unconstrained space (if necessary),
-3. Have functions to compute the log probability of your model and its
-   derivative, exposed through a Python callable,
+3. Have a Python function/callable that:
+
+   1. computes the log probability of your model and its derivative
+   2. is `pickleable <https://docs.python.org/3/library/pickle.html>`__
+   3. outputs an array with the same shape as its input
+
 4. And all you need is an implementation of HMC/NUTS (preferably in
    Python) to sample from the posterior,
 
@@ -76,36 +82,26 @@ How to Sample
 
 .. code:: python
 
+    # By default: 4 chains in 4 cores, 500 tuning steps and 1000 sampling steps.
     trace, stats = lmc.sample(
         logp_dlogp_func=logp_dlogp_func,
-        size=1,
-        draws=1000,
-        tune=500,
-        step=lmc.NUTS(logp_dlogp_func=logp_dlogp_func, size=1),
-        chains=4,
-        cores=1,
-        progressbar=None  # HTML progress bars don't render well in RST.
+        model_ndim=1,
+        progressbar=None,  # HTML progress bars don't render well in RST.
     )
+
+
+.. parsed-literal::
+
+    /home/george/littlemcmc/venv/lib/python3.6/site-packages/ipykernel_launcher.py:2: RuntimeWarning: divide by zero encountered in log
+      
+
 
 Inspecting the Output of ``lmc.sample``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
-    trace
-
-
-
-
-.. parsed-literal::
-
-    array([[-0.15004566, -0.46170896, -0.19921587, ..., -0.83863543,
-            -0.21860966,  1.19312616]])
-
-
-
-.. code:: python
-
+    # Shape is (num_chains, num_samples, num_parameters)
     trace.shape
 
 
@@ -113,52 +109,128 @@ Inspecting the Output of ``lmc.sample``
 
 .. parsed-literal::
 
-    (1, 4000)
+    (4, 1000, 1)
 
 
 
 .. code:: python
 
-    stats
+    # The first 2 samples across all chains and parameters
+    trace[:, :2, :]
 
 
 
 
 .. parsed-literal::
 
-    {'depth': array([2, 1, 1, ..., 2, 2, 2]),
-     'step_size': array([2.05084533, 2.05084533, 2.05084533, ..., 2.05084533, 2.05084533,
-            2.05084533]),
-     'tune': array([False, False, False, ..., False, False, False]),
-     'mean_tree_accept': array([0.98804566, 0.96665999, 1.        , ..., 0.71715969, 1.        ,
-            0.82667303]),
-     'step_size_bar': array([1.38939851, 1.38939851, 1.38939851, ..., 1.38939851, 1.38939851,
-            1.38939851]),
-     'tree_size': array([3., 1., 1., ..., 3., 3., 3.]),
-     'diverging': array([False, False, False, ..., False, False, False]),
-     'energy_error': array([ 2.32073322e-04,  3.39084572e-02, -3.08542532e-02, ...,
-             2.22621388e-02, -1.16581736e-01,  2.44673926e-01]),
-     'energy': array([0.98408598, 1.02562518, 0.99620082, ..., 2.83266304, 1.15420445,
-            1.74209033]),
-     'max_energy_error': array([ 0.01815012,  0.03390846, -0.03085425, ...,  0.54999299,
-            -0.11658174,  0.30105821]),
-     'model_logp': array([-0.93019538, -1.02552611, -0.93878201, ..., -1.27059323,
-            -0.94283363, -1.63071355])}
+    array([[[ 0.92958231],
+            [ 0.92958231]],
+    
+           [[-1.06231693],
+            [-1.11589309]],
+    
+           [[-0.73177109],
+            [-0.66975061]],
+    
+           [[ 0.8923907 ],
+            [ 0.97253646]]])
 
 
 
 .. code:: python
 
-    stats["diverging"].shape
+    stats.keys()
 
 
 
 
 .. parsed-literal::
 
-    (4000,)
+    dict_keys(['depth', 'step_size', 'tune', 'mean_tree_accept', 'step_size_bar', 'tree_size', 'diverging', 'energy_error', 'energy', 'max_energy_error', 'model_logp'])
 
 
+
+.. code:: python
+
+    # Again, shape is (num_chains, num_samples, num_parameters)
+    stats["depth"].shape
+
+
+
+
+.. parsed-literal::
+
+    (4, 1000, 1)
+
+
+
+.. code:: python
+
+    # The first 2 tree depths across all chains and parameters
+    stats["depth"][:, :2, :]
+
+
+
+
+.. parsed-literal::
+
+    array([[[2],
+            [1]],
+    
+           [[1],
+            [1]],
+    
+           [[2],
+            [1]],
+    
+           [[2],
+            [1]]])
+
+
+
+Customizing the Default NUTS Sampler
+------------------------------------
+
+By default, ``lmc.sample`` samples using NUTS with sane defaults. These
+defaults can be override by either:
+
+1. Passing keyword arguments from ``lmc.NUTS`` into ``lmc.sample``, or
+2. Constructing an ``lmc.NUTS`` sampler, and passing that to
+   ``lmc.sample``. This method also allows you to choose to other
+   samplers, such as ``lmc.HamiltonianMC``.
+
+For example, suppose you want to increase the ``target_accept`` from the
+default ``0.8`` to ``0.9``. The following two cells are equivalent:
+
+.. code:: python
+
+    trace, stats = lmc.sample(
+        logp_dlogp_func=logp_dlogp_func,
+        model_ndim=1,
+        target_accept=0.9,
+        progressbar=None,
+    )
+
+.. code:: python
+
+    step = lmc.NUTS(logp_dlogp_func=logp_dlogp_func, model_ndim=1, target_accept=0.9)
+    trace, stats = lmc.sample(
+        logp_dlogp_func=logp_dlogp_func,
+        model_ndim=1,
+        step=step,
+        progressbar=None,
+    )
+
+
+.. parsed-literal::
+
+    /home/george/littlemcmc/venv/lib/python3.6/site-packages/ipykernel_launcher.py:2: RuntimeWarning: divide by zero encountered in log
+      
+
+
+For a list of keyword arguments that ``lmc.NUTS`` accepts, please refer
+to the `API reference for
+``lmc.NUTS`` <https://littlemcmc.readthedocs.io/en/latest/generated/littlemcmc.NUTS.html#littlemcmc.NUTS>`__.
 
 Other Modules
 -------------
