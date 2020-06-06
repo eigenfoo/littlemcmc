@@ -133,6 +133,7 @@ class QuadPotential(object):
         return None
 
     def reset(self):
+        """Reset quadpotential adaptation routine."""
         pass
 
 
@@ -179,16 +180,25 @@ class QuadPotentialDiagAdapt(QuadPotential):
 
         self.dtype = dtype
         self._n = n
-        self._var = np.array(initial_diag, dtype=self.dtype, copy=True)
-        self._stds = np.sqrt(initial_diag)
+
+        self._initial_mean = initial_mean
+        self._initial_diag = initial_diag
+        self._initial_weight = initial_weight
+        self.adaptation_window = adaptation_window
+        self.adaptation_window_multiplier = float(adaptation_window_multiplier)
+
+        self.reset()
+
+    def reset(self):
+        """Reset quadpotential adaptation routine."""
+        self._var = np.array(self._initial_diag, dtype=self.dtype, copy=True)
+        self._stds = np.sqrt(self._initial_diag)
         self._inv_stds = 1.0 / self._stds
         self._foreground_var = _WeightedVariance(
-            self._n, initial_mean, initial_diag, initial_weight, self.dtype
+            self._n, self._initial_mean, self._initial_diag, self._initial_weight, self.dtype
         )
         self._background_var = _WeightedVariance(self._n, dtype=self.dtype)
         self._n_samples = 0
-        self.adaptation_window = adaptation_window
-        self.adaptation_window_multiplier = float(adaptation_window_multiplier)
 
     def velocity(self, x, out=None):
         """Compute the current velocity at a position in parameter space."""

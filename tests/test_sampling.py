@@ -114,3 +114,24 @@ def test_nuts_recovers_1d_normal():
 
     assert np.allclose(np.mean(trace), 0, atol=1)
     assert np.allclose(np.std(trace), 1, atol=1)
+
+
+def test_reset_tuning():
+    model_ndim = 1
+    draws = 2
+    tune = 50
+    chains = 2
+    start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, model_ndim=1)
+    cores = 1
+    lmc.sample(
+        logp_dlogp_func,
+        model_ndim,
+        draws=draws,
+        tune=tune,
+        chains=chains,
+        step=step,
+        start=start,
+        cores=cores,
+    )
+    assert step.potential._n_samples == tune
+    assert step.step_adapt._count == tune + 1
