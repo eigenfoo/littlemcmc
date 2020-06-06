@@ -121,7 +121,7 @@ def test_reset_tuning():
     draws = 2
     tune = 50
     chains = 2
-    start, step = lmc.sampling.init_nuts(chains=chains)
+    start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, model_ndim=1, chains=chains)
     cores = 1
     lmc.sample(
         logp_dlogp_func, draws=draws, tune=tune, chains=chains, step=step, start=start, cores=cores
