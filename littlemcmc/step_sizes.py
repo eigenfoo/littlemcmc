@@ -47,6 +47,7 @@ class DualAverageAdaptation(object):
         self.reset()
 
     def reset(self):
+        """Reset step size adaptation routine."""
         self._log_step = np.log(self._initial_step)
         self._log_bar = self._log_step
         self._hbar = 0.0

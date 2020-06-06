@@ -133,6 +133,7 @@ class QuadPotential(object):
         return None
 
     def reset(self):
+        """Reset quadpotential adaptation routine."""
         pass
 
 
@@ -189,6 +190,7 @@ class QuadPotentialDiagAdapt(QuadPotential):
         self.reset()
 
     def reset(self):
+        """Reset quadpotential adaptation routine."""
         self._var = np.array(self._initial_diag, dtype=self.dtype, copy=True)
         self._stds = np.sqrt(self._initial_diag)
         self._inv_stds = 1.0 / self._stds

@@ -189,11 +189,13 @@ class BaseHMC:
 
         return hmc_step.end.q, [stats]
 
-    def reset_tuning(self, start=None):
+    def reset_tuning(self, start: np.ndarray = None) -> None:
+        """Reset quadpotential and step size adaptation, and begin retuning."""
         self.step_adapt.reset()
         self.reset(start=None)
 
-    def reset(self, start=None):
+    def reset(self, start: np.ndarray = None) -> None:
+        """Reset quadpotential and begin retuning."""
         self.tune = True
         self.potential.reset()
 
