@@ -123,6 +123,8 @@ def test_reset_tuning(self):
     chains = 2
     start, step = lmc.sampling.init_nuts(chains=chains)
     cores = 1
-    lmc.sample(logp_dlogp_func, draws=draws, tune=tune, chains=chains, step=step, start=start, cores=cores)
+    lmc.sample(
+        logp_dlogp_func, draws=draws, tune=tune, chains=chains, step=step, start=start, cores=cores
+    )
     assert step.potential._n_samples == tune
     assert step.step_adapt._count == tune + 1

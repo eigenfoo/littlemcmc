@@ -49,7 +49,7 @@ class DualAverageAdaptation(object):
     def reset(self):
         self._log_step = np.log(self._initial_step)
         self._log_bar = self._log_step
-        self._hbar = 0.
+        self._hbar = 0.0
         self._count = 1
         self._mu = np.log(10 * self._initial_step)
         self._tuned_stats = []
