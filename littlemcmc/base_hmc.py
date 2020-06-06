@@ -189,6 +189,14 @@ class BaseHMC:
 
         return hmc_step.end.q, [stats]
 
+    def reset_tuning(self, start=None):
+        self.step_adapt.reset()
+        self.reset(start=None)
+
+    def reset(self, start=None):
+        self.tune = True
+        self.potential.reset()
+
     def warnings(self) -> List[SamplerWarning]:
         """Generate warnings from HMC sampler."""
         # list.copy() is only available in Python 3
