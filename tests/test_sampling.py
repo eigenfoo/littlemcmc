@@ -116,7 +116,7 @@ def test_nuts_recovers_1d_normal():
     assert np.allclose(np.std(trace), 1, atol=1)
 
 
-def test_reset_tuning(self):
+def test_reset_tuning():
     model_ndim = 1
     draws = 2
     tune = 50
