@@ -59,6 +59,9 @@ def _sample_one_chain(
     else:
         iterator = range(tune + draws)
 
+    step.tune = bool(tune)
+    if hasattr(step, "reset_tuning"):
+        step.reset_tuning()
     for i in iterator:
         q, step_stats = step._astep(q)
         trace[:, i] = q
