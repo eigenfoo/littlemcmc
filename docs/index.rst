@@ -34,5 +34,6 @@ LittleMCMC
 
    install
    tutorials/quickstart
+   tutorials/framework_cookbook
    api
    developer_guide
