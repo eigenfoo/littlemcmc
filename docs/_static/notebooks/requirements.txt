@@ -1,0 +1,10 @@
+arviz==0.8.3
+jax==0.1.70
+jaxlib==0.1.47
+matplotlib==3.2.1
+numpy==1.18.5
+pymc3==3.8
+tensorflow==2.2.0
+Theano==1.0.4
+torch==1.5.0
+jupyter==1.0.0
