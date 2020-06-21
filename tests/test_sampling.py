@@ -41,7 +41,12 @@ def test_hmc_sampling_runs():
     )
 
     assert trace.shape == (chains, draws, model_ndim)
-    assert all([stats[name].shape == (chains, draws, model_ndim) for (name, _) in step.stats_dtypes[0].items()])
+    assert all(
+        [
+            stats[name].shape == (chains, draws, model_ndim)
+            for (name, _) in step.stats_dtypes[0].items()
+        ]
+    )
     assert all(
         [
             stats[name].dtype == expected_dtype
@@ -63,7 +68,12 @@ def test_nuts_sampling_runs():
     )
 
     assert trace.shape == (chains, draws, model_ndim)
-    assert all([stats[name].shape == (chains, draws, model_ndim) for (name, _) in step.stats_dtypes[0].items()])
+    assert all(
+        [
+            stats[name].shape == (chains, draws, model_ndim)
+            for (name, _) in step.stats_dtypes[0].items()
+        ]
+    )
     assert all(
         [
             stats[name].dtype == expected_dtype
