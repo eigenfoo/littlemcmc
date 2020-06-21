@@ -8,6 +8,16 @@ pytest
 pytest-cov
 pytest-html
 
+# Packages for documentation
+arviz==0.8.3
+jax==0.1.70
+jaxlib==0.1.47
+matplotlib==3.2.1
+pymc3==3.8
+tensorflow==2.2.0
+Theano==1.0.4
+torch==1.5.0
+
 # Packaging requirements
 setuptools
 twine
