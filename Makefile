@@ -35,6 +35,7 @@ venv:  # Set up a Python virtual environment for development.
 	${PIP} install -U pip
 	${PIP} install -r requirements.txt
 	${PIP} install -r requirements-dev.txt
+	${PIP} install -e .
 	deactivate
 	@printf "\n\nVirtual environment created! \033[1;34mRun \`source venv/bin/activate\` to activate it.\033[0m\n\n\n"
 
