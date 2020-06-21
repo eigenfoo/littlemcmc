@@ -423,9 +423,7 @@ class _Tree(object):
             # Remove contribution from initial state which is always a perfect
             # accept
             log_sum_weight = logdiffexp_numpy(self.log_size, 0.0)
-            self.mean_tree_accept = np.exp(
-                self.log_weighted_accept_sum - log_sum_weight
-            )
+            self.mean_tree_accept = np.exp(self.log_weighted_accept_sum - log_sum_weight)
 
         return {
             "depth": self.depth,

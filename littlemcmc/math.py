@@ -38,5 +38,3 @@ def log1mexp_numpy(x):
 def logdiffexp_numpy(a, b):
     """Compute log(exp(a) - exp(b))."""
     return a + log1mexp_numpy(a - b)
-
-
