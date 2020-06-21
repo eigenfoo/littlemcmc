@@ -27,3 +27,7 @@ from .quadpotential import (
     QuadPotentialDiagAdapt,
     QuadPotentialFullAdapt,
 )
+
+import multiprocessing as mp
+
+ctx = mp.get_context("spawn")
