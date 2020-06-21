@@ -25,7 +25,7 @@ def logbern(log_p: float) -> bool:
     return np.log(nr.uniform()) < log_p
 
 
-def log1mexp_numpy(x):
+def log1mexp_numpy(x: float) -> float:
     """
     Compute log(1 - exp(-x)).
 
@@ -35,6 +35,6 @@ def log1mexp_numpy(x):
     return np.where(x < 0.683, np.log(-np.expm1(-x)), np.log1p(-np.exp(-x)))
 
 
-def logdiffexp_numpy(a, b):
+def logdiffexp_numpy(a: float, b: float) -> float:
     """Compute log(exp(a) - exp(b))."""
     return a + log1mexp_numpy(a - b)

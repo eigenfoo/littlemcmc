@@ -20,7 +20,6 @@ from collections import namedtuple
 from typing import Callable, Tuple, List, Optional
 
 import numpy as np
-import numpy.random as nr
 
 from .math import logbern, logdiffexp_numpy
 from .base_hmc import BaseHMC, HMCStepData, DivergenceInfo
