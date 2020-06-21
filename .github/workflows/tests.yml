@@ -31,5 +31,4 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         name: codecov-umbrella
-        yml: ./.codecov.yml
         fail_ci_if_error: true
