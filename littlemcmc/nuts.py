@@ -22,32 +22,12 @@ from typing import Callable, Tuple, List, Optional
 import numpy as np
 import numpy.random as nr
 
+from .math import logbern, logdiffexp_numpy
 from .base_hmc import BaseHMC, HMCStepData, DivergenceInfo
 from .integration import IntegrationError
 from .report import SamplerWarning, WarningType
 
 __all__ = ["NUTS"]
-
-
-def logbern(log_p: float) -> bool:
-    if np.isnan(log_p):
-        raise FloatingPointError("log_p can't be nan.")
-    return np.log(nr.uniform()) < log_p
-
-
-def log1mexp_numpy(x):
-    """Compute log(1 - exp(-x)).
-
-    This function is numerically more stable than the naive approach.
-    For details, see
-    https://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf
-    """
-    return np.where(x < 0.683, np.log(-np.expm1(-x)), np.log1p(-np.exp(-x)))
-
-
-def logdiffexp_numpy(a, b):
-    """Compute log(exp(a) - exp(b))."""
-    return a + log1mexp_numpy(a - b)
 
 
 class NUTS(BaseHMC):
