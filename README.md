@@ -1,5 +1,8 @@
 <p align="center"><img src="docs/_static/logo/default-cropped.png"></p>
 
+> *Warning:* `littlemcmc` is still in pre-release and under development. Most notably,
+> multiprocess sampling is still unstable. Please consult [our GitHub issues](https://github.com/eigenfoo/littlemcmc/issues).
+
 ---
 
 ![Tests Status](https://github.com/eigenfoo/littlemcmc/workflows/tests/badge.svg)
@@ -14,6 +17,12 @@
 > A lightweight and performant implementation of HMC and NUTS in Python, spun
 > out of [the PyMC project](https://github.com/pymc-devs). Not to be confused
 > with [minimc](https://github.com/ColCarroll/minimc).
+
+## Should I Use `littlemcmc`?
+
+Unless you are a specific kind of user, probably not! Please refer to [the `littlemcmc`
+quickstart](https://littlemcmc.readthedocs.io/en/latest/tutorials/quickstart.html#who-should-use-littlemcmc)
+for more details.
 
 ## Installation
 
