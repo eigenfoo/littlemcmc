@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 import multiprocessing
-import multiprocessing.sharedctypes
 import ctypes
 import time
 import logging
@@ -21,14 +20,13 @@ import pickle
 from collections import namedtuple
 import traceback
 import platform
-from pymc3.exceptions import SamplingError
+from .exceptions import SamplingError
 
 import numpy as np
 from fastprogress.fastprogress import progress_bar
 
-from . import theanof
 
-logger = logging.getLogger("pymc3")
+logger = logging.getLogger("littlemcmc")
 
 
 class ParallelSamplingError(Exception):
@@ -168,8 +166,6 @@ class _Process:
 
     def _start_loop(self):
         np.random.seed(self._seed)
-        theanof.set_tt_rng(self._tt_seed)
-
         draw = 0
         tuning = True
 
