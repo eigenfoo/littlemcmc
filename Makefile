@@ -54,7 +54,7 @@ pylintstyle:
 .PHONY: pydocstyle
 pydocstyle:
 	@printf "Checking documentation with pydocstyle...\n"
-	pydocstyle --convention=numpy littlemcmc/
+	pydocstyle --convention=numpy --match='(?!parallel_sampling).*\.py' littlemcmc/
 	@printf "\033[1;34mPydocstyle passes!\033[0m\n\n"
 
 .PHONY: mypytypes

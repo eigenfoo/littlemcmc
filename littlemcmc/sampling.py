@@ -17,10 +17,8 @@
 import os
 from collections.abc import Iterable
 import pickle
-from copy import copy
 from typing import Callable, Tuple, Optional, Union, List
 import logging
-from joblib import Parallel, delayed
 import numpy as np
 from fastprogress.fastprogress import progress_bar
 
@@ -242,6 +240,8 @@ def _mp_sample(
     **kwargs,
 ):
     """
+    Sample multiple chains in multiple processes.
+
     Main iteration for multiprocess sampling.
 
     Parameters
@@ -370,7 +370,8 @@ def _sample_many(
     callback=None,
     **kwargs,
 ):
-    """Samples all chains sequentially.
+    """
+    Sample all chains sequentially.
 
     Parameters
     ----------
@@ -442,7 +443,7 @@ def _sample(
     **kwargs,
 ):
     """
-    Main iteration for singleprocess sampling.
+    Sample one chain in one process.
 
     Parameters
     ----------
@@ -484,8 +485,10 @@ def _sample(
     if progressbar:
         sampling = progress_bar(sampling, total=tune + draws, display=progressbar)
         sampling.comment = _desc.format(**_pbar_data)
+
+    trace = None
+    stats = None
     try:
-        trace = None
         for it, (trace, stats) in enumerate(sampling):
             if it >= skip_first:  # and diverging:
                 # FIXME: surface num divergences from `stats`
@@ -495,7 +498,8 @@ def _sample(
     except KeyboardInterrupt:
         pass
 
-    if discard_tuned_samples:
+    if discard_tuned_samples and trace is not None and stats is not None:
+        # pylint: disable=W0631
         trace = trace[:, tune:]
         stats = stats[tune:]
 
@@ -512,7 +516,11 @@ def _iter_sample(
     random_seed: Union[None, int, List[int]] = None,
     callback=None,
 ):
-    """Sample one chain in one process."""
+    """
+    Yield one chain in one process.
+
+    Main iterator for singleprocess sampling.
+    """
     if random_seed is not None:
         np.random.seed(random_seed)
 
