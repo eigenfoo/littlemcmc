@@ -160,7 +160,7 @@ def sample(
 
     if start is None:
         start = {}
-    if isinstance(start, np.ndarray) or isinstance(start, dict) :
+    if isinstance(start, np.ndarray) or isinstance(start, dict):
         start = [start] * chains
 
     sample_args = {
@@ -482,7 +482,7 @@ def _sample(
     _pbar_data = {"chain": chain, "divergences": 0}
     _desc = "Sampling chain {chain:d}, {divergences:,d} divergences"
     if progressbar:
-        sampling = progress_bar(sampling, total=draws, display=progressbar)
+        sampling = progress_bar(sampling, total=tune + draws, display=progressbar)
         sampling.comment = _desc.format(**_pbar_data)
     try:
         trace = None
@@ -523,6 +523,7 @@ def _iter_sample(
     step.tune = bool(tune)
     if hasattr(step, "reset_tuning"):
         step.reset_tuning()
+
     for i in range(tune + draws):
         if i == 0 and hasattr(step, "iter_count"):
             step.iter_count = 0
@@ -533,10 +534,10 @@ def _iter_sample(
         stats.extend(step_stats)
         if callback is not None:
             warns = getattr(step, "warnings", None)
+            # FIXME: think about how callbacks will work in littlemcmc...
             callback(
-                trace=strace, draw=Draw(chain, i == draws, i, i < tune, stats, point, warns),
+                trace=trace, draw=(chain, i == draws, i, i < tune, stats, point, warns),
             )
-
         yield trace, stats
 
 
