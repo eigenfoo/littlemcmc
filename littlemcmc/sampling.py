@@ -16,64 +16,20 @@
 
 import os
 from collections.abc import Iterable
+import pickle
 from typing import Callable, Tuple, Optional, Union, List
 import logging
-from joblib import Parallel, delayed
 import numpy as np
-from tqdm import tqdm, tqdm_notebook
+from fastprogress.fastprogress import progress_bar
+
+from . import parallel_sampling as ps
 from .nuts import NUTS
 from .hmc import HamiltonianMC
 from .quadpotential import QuadPotential, QuadPotentialDiagAdapt, QuadPotentialFullAdapt
 from .report import SamplerWarning
 
+
 _log = logging.getLogger("littlemcmc")
-
-
-def _sample_one_chain(
-    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
-    model_ndim: int,
-    draws: int,
-    tune: int,
-    step: Union[NUTS, HamiltonianMC],
-    start: np.ndarray,
-    random_seed: Union[None, int, List[int]] = None,
-    discard_tuned_samples: bool = True,
-    progressbar: Union[bool, str] = True,
-    progressbar_position: Optional[int] = None,
-):
-    """Sample one chain in one process."""
-    if random_seed is not None:
-        np.random.seed(random_seed)
-
-    if progressbar_position is None:
-        progressbar_position = 0
-
-    q = start
-    trace = np.zeros([model_ndim, tune + draws])
-    stats: List[SamplerWarning] = []
-
-    if progressbar == "notebook":
-        iterator = tqdm_notebook(range(tune + draws), position=progressbar_position)
-    elif progressbar == "console" or progressbar:
-        iterator = tqdm(range(tune + draws), position=progressbar_position)
-    else:
-        iterator = range(tune + draws)
-
-    step.tune = bool(tune)
-    if hasattr(step, "reset_tuning"):
-        step.reset_tuning()
-    for i in iterator:
-        q, step_stats = step._astep(q)
-        trace[:, i] = q
-        stats.extend(step_stats)
-        if i == tune - 1:  # Draws are 0-indexed, not 1-indexed
-            step.stop_tuning()
-
-    if discard_tuned_samples:
-        trace = trace[:, tune:]
-        stats = stats[tune:]
-
-    return trace, stats
 
 
 def sample(
@@ -89,6 +45,10 @@ def sample(
     progressbar: Union[bool, str] = True,
     random_seed: Optional[Union[int, List[int]]] = None,
     discard_tuned_samples: bool = True,
+    chain_idx: int = 0,
+    callback=None,
+    mp_ctx=None,
+    pickle_backend: str = "pickle",
     **kwargs,
 ):
     """
@@ -196,25 +156,55 @@ def sample(
         if start is None:
             start = start_
 
-    _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
-    results = Parallel(n_jobs=cores, backend="multiprocessing")(
-        delayed(_sample_one_chain)(
-            logp_dlogp_func=logp_dlogp_func,
-            model_ndim=model_ndim,
-            draws=draws,
-            tune=tune,
-            step=step,
-            start=start,
-            random_seed=seed,
-            discard_tuned_samples=discard_tuned_samples,
-            progressbar=progressbar,
-            progressbar_position=i,
-        )
-        for i, seed in enumerate(random_seed)
-    )
+    if start is None:
+        start = {}
+    if isinstance(start, np.ndarray) or isinstance(start, dict):
+        start = [start] * chains
+
+    sample_args = {
+        "logp_dlogp_func": logp_dlogp_func,
+        "model_ndim": model_ndim,
+        "draws": draws,
+        "tune": tune,
+        "step": step,
+        "start": start,
+        "chain": chain_idx,
+        "chains": chains,
+        "progressbar": progressbar,
+        "random_seed": random_seed,
+        "cores": cores,
+        "callback": callback,
+        "discard_tuned_samples": discard_tuned_samples,
+    }
+    parallel_args = {
+        "pickle_backend": pickle_backend,
+        "mp_ctx": mp_ctx,
+    }
+
+    parallel = cores > 1 and chains > 1
+    parallel = False  # FIXME: remove this
+    if parallel:
+        _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
+        try:
+            trace = _mp_sample(**sample_args, **parallel_args)
+        except pickle.PickleError:
+            _log.warning("Could not pickle model, sampling singlethreaded.")
+            _log.debug("Pickling error:", exec_info=True)
+            parallel = False
+        except AttributeError as e:
+            if str(e).startswith("AttributeError: Can't pickle"):
+                _log.warning("Could not pickle model, sampling singlethreaded.")
+                _log.debug("Pickling error:", exec_info=True)
+                parallel = False
+            else:
+                raise
+
+    if not parallel:
+        _log.info("Sequential sampling ({} chains in 1 job)".format(chains))
+        traces, stats = _sample_many(**sample_args)
 
     # Reshape `trace` to have shape [num_chains, num_samples, num_variables]
-    trace = np.array([np.atleast_2d(chain_trace).T for (chain_trace, _) in results])
+    trace = np.array([np.atleast_2d(chain_trace).T for chain_trace in traces])
 
     # Reshape `stats` to a dictionary with keys = string of sampling stat name,
     # values = np.array with shape [num_chains, num_samples, num_variables]
@@ -222,13 +212,341 @@ def sample(
         name: np.array(
             [
                 [np.atleast_1d(iter_stats[name]) for iter_stats in chain_stats]
-                for (_, chain_stats) in results
+                for chain_stats in stats
             ]
         ).astype(dtype)
         for (name, dtype) in step.stats_dtypes[0].items()
     }
 
     return trace, stats
+
+
+def _mp_sample(
+    draws: int,
+    tune: int,
+    step,
+    chains: int,
+    cores: int,
+    chain: int,
+    random_seed: list,
+    start: list,
+    progressbar=True,
+    trace=None,
+    model=None,
+    callback=None,
+    discard_tuned_samples=True,
+    mp_ctx=None,
+    pickle_backend="pickle",
+    **kwargs,
+):
+    """
+    Sample multiple chains in multiple processes.
+
+    Main iteration for multiprocess sampling.
+
+    Parameters
+    ----------
+    draws : int
+        The number of samples to draw
+    tune : int, optional
+        Number of iterations to tune, if applicable (defaults to None)
+    step : function
+        Step function
+    chains : int
+        The number of chains to sample.
+    cores : int
+        The number of chains to run in parallel.
+    chain : int
+        Number of the first chain.
+    random_seed : list of ints
+        Random seeds for each chain.
+    start : list
+        Starting points for each chain.
+    progressbar : bool
+        Whether or not to display a progress bar in the command line.
+    trace : backend, list, MultiTrace or None
+        This should be a backend instance, a list of variables to track, or a MultiTrace object
+        with past values. If a MultiTrace object is given, it must contain samples for the chain
+        number ``chain``. If None or a list of variables, the NDArray backend is used.
+    model : Model (optional if in ``with`` context)
+    callback : Callable
+        A function which gets called for every sample from the trace of a chain. The function is
+        called with the trace and the current draw and will contain all samples for a single trace.
+        the ``draw.chain`` argument can be used to determine which of the active chains the sample
+        is drawn from.
+        Sampling can be interrupted by throwing a ``KeyboardInterrupt`` in the callback.
+
+    Returns
+    -------
+    trace : pymc3.backends.base.MultiTrace
+        A ``MultiTrace`` object that contains the samples for all chains.
+    """
+    # We did draws += tune in pm.sample
+    # FIXME: does this apply to littlemcmc? Need to figure out how `sample` calls
+    # `_mp_sample`.
+    draws -= tune
+
+    # FIXME: strace is always np array like for littlemcmc
+    traces = []
+    """
+    for idx in range(chain, chain + chains):
+        if trace is not None:
+            strace = _choose_backend(copy(trace), idx, model=model)
+        else:
+            strace = _choose_backend(None, idx, model=model)
+        # for user supply start value, fill-in missing value if the supplied
+        # dict does not contain all parameters
+        update_start_vals(start[idx - chain], model.test_point, model)
+        if step.generates_stats and strace.supports_sampler_stats:
+            strace.setup(draws + tune, idx + chain, step.stats_dtypes)
+        else:
+            strace.setup(draws + tune, idx + chain)
+        traces.append(strace)
+    """
+
+    sampler = ps.ParallelSampler(
+        draws,
+        tune,
+        chains,
+        cores,
+        random_seed,
+        start,
+        step,
+        chain,
+        progressbar,
+        mp_ctx=mp_ctx,
+        pickle_backend=pickle_backend,
+    )
+    try:
+        try:
+            with sampler:
+                for draw in sampler:
+                    trace = traces[draw.chain - chain]
+                    if trace.supports_sampler_stats and draw.stats is not None:
+                        trace.record(draw.point, draw.stats)
+                    else:
+                        trace.record(draw.point)
+                    if draw.is_last:
+                        trace.close()
+                        if draw.warnings is not None:
+                            trace._add_warnings(draw.warnings)
+
+                    if callback is not None:
+                        callback(trace=trace, draw=draw)
+
+        except ps.ParallelSamplingError as error:
+            trace = traces[error._chain - chain]
+            trace._add_warnings(error._warnings)
+            for trace in traces:
+                trace.close()
+
+            # FIXME: use np ndarray instead of multitrace
+            multitrace = MultiTrace(traces)
+            multitrace._report._log_summary()
+            raise
+        return MultiTrace(traces)
+    except KeyboardInterrupt:
+        if discard_tuned_samples:
+            traces, length = _choose_chains(traces, tune)
+        else:
+            traces, length = _choose_chains(traces, 0)
+        return MultiTrace(traces)[:length]
+    finally:
+        for trace in traces:
+            trace.close()
+
+
+def _sample_many(
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    model_ndim: int,
+    draws: int,
+    tune: int,
+    chain: int,
+    chains: int,
+    start: list,
+    random_seed: list,
+    step,
+    discard_tuned_samples=True,
+    callback=None,
+    **kwargs,
+):
+    """
+    Sample all chains sequentially.
+
+    Parameters
+    ----------
+    draws: int
+        The number of samples to draw
+    chain: int
+        Number of the first chain in the sequence.
+    chains: int
+        Total number of chains to sample.
+    start: list
+        Starting points for each chain
+    random_seed: list
+        A list of seeds, one for each chain
+    step: function
+        Step function
+
+    Returns
+    -------
+    trace, stats
+    """
+    traces = []
+    stats = []
+
+    for i in range(chains):
+        trace, stats_ = _sample(
+            logp_dlogp_func=logp_dlogp_func,
+            model_ndim=model_ndim,
+            draws=draws,
+            tune=tune,
+            random_seed=random_seed[i],
+            chain=chain + i,
+            start=start[i],
+            step=step,
+            discard_tuned_samples=discard_tuned_samples,
+            callback=callback,
+            **kwargs,
+        )
+        if trace is None:
+            if len(traces) == 0:
+                raise ValueError("Sampling stopped before a sample was created.")
+            else:
+                break
+        # TODO: bring this back for easy keyboard interrupts...?
+        # elif len(trace) < tune + draws:
+        #     if len(traces) == 0:
+        #         traces.append(trace)
+        #         stats.append(stats_)
+        #     break
+        else:
+            traces.append(trace)
+            stats.append(stats_)
+
+    return traces, stats
+
+
+def _sample(
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    model_ndim: int,
+    chain: int,
+    progressbar: bool,
+    random_seed,
+    start,
+    draws: int,
+    step=None,
+    trace=None,
+    tune=None,
+    discard_tuned_samples=True,
+    callback=None,
+    **kwargs,
+):
+    """
+    Sample one chain in one process.
+
+    Parameters
+    ----------
+    logp_dlogp_func : Python callable
+    model_ndim : int
+    chain : int
+        Number of the chain that the samples will belong to.
+    progressbar : bool
+        Whether or not to display a progress bar in the command line. The bar shows the percentage
+        of completion, the sampling speed in samples per second (SPS), and the estimated remaining
+        time until completion ("expected time of arrival"; ETA).
+    random_seed : int or list of ints
+        A list is accepted if ``cores`` is greater than one.
+    start : dict
+        Starting point in parameter space (or partial point)
+    draws : int
+        The number of samples to draw
+    step : function
+        Step function
+    trace : backend, list, or MultiTrace
+        This should be a backend instance, a list of variables to track, or a MultiTrace object
+        with past values. If a MultiTrace object is given, it must contain samples for the chain
+        number ``chain``. If None or a list of variables, the NDArray backend is used.
+    tune : int, optional
+        Number of iterations to tune, if applicable (defaults to None)
+    callback : Python callable, optional
+
+    Returns
+    -------
+    trace, stats
+    """
+    skip_first = kwargs.get("skip_first", 0)
+
+    sampling = _iter_sample(
+        logp_dlogp_func, model_ndim, draws, tune, step, start, random_seed, callback
+    )
+    _pbar_data = {"chain": chain, "divergences": 0}
+    _desc = "Sampling chain {chain:d}, {divergences:,d} divergences"
+    if progressbar:
+        sampling = progress_bar(sampling, total=tune + draws, display=progressbar)
+        sampling.comment = _desc.format(**_pbar_data)
+
+    trace = None
+    stats = None
+    try:
+        for it, (trace, stats) in enumerate(sampling):
+            if it >= skip_first:  # and diverging:
+                # FIXME: surface num divergences from `stats`
+                # _pbar_data["divergences"] += 1
+                if progressbar:
+                    sampling.comment = _desc.format(**_pbar_data)
+    except KeyboardInterrupt:
+        pass
+
+    if discard_tuned_samples and trace is not None and stats is not None:
+        # pylint: disable=W0631
+        trace = trace[:, tune:]
+        stats = stats[tune:]
+
+    return trace, stats
+
+
+def _iter_sample(
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    model_ndim: int,
+    draws: int,
+    tune: int,
+    step: Union[NUTS, HamiltonianMC],
+    start: np.ndarray,
+    random_seed: Union[None, int, List[int]] = None,
+    callback=None,
+):
+    """
+    Yield one chain in one process.
+
+    Main iterator for singleprocess sampling.
+    """
+    if random_seed is not None:
+        np.random.seed(random_seed)
+
+    q = start
+    trace = np.zeros([model_ndim, tune + draws])
+    stats: List[SamplerWarning] = []
+
+    step.tune = bool(tune)
+    if hasattr(step, "reset_tuning"):
+        step.reset_tuning()
+
+    for i in range(tune + draws):
+        if i == 0 and hasattr(step, "iter_count"):
+            step.iter_count = 0
+        if i == tune:
+            step.stop_tuning()
+        q, step_stats = step._astep(q)
+        trace[:, i] = q
+        stats.extend(step_stats)
+        if callback is not None:
+            warns = getattr(step, "warnings", None)
+            # FIXME: think about how callbacks will work in littlemcmc...
+            callback(
+                trace=trace, draw=(chain, i == draws, i, i < tune, stats, point, warns),
+            )
+        yield trace, stats
 
 
 def init_nuts(
