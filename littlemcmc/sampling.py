@@ -182,7 +182,6 @@ def sample(
     }
 
     parallel = cores > 1 and chains > 1
-    parallel = False  # FIXME: remove this
     if parallel:
         _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
         try:
@@ -222,6 +221,8 @@ def sample(
 
 
 def _mp_sample(
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    model_ndim: int,
     draws: int,
     tune: int,
     step,
@@ -232,7 +233,6 @@ def _mp_sample(
     start: list,
     progressbar=True,
     trace=None,
-    model=None,
     callback=None,
     discard_tuned_samples=True,
     mp_ctx=None,
@@ -281,10 +281,6 @@ def _mp_sample(
     trace : pymc3.backends.base.MultiTrace
         A ``MultiTrace`` object that contains the samples for all chains.
     """
-    # We did draws += tune in pm.sample
-    # FIXME: does this apply to littlemcmc? Need to figure out how `sample` calls
-    # `_mp_sample`.
-    draws -= tune
 
     # FIXME: strace is always np array like for littlemcmc
     traces = []
@@ -320,6 +316,9 @@ def _mp_sample(
     try:
         try:
             with sampler:
+                # TODO: need to modify ps.ParallelSampler to accept logp_dlogp_func and
+                # model_ndim. Then need to rework this function in the same style as
+                # _sample_many
                 for draw in sampler:
                     trace = traces[draw.chain - chain]
                     if trace.supports_sampler_stats and draw.stats is not None:
