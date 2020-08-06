@@ -268,7 +268,6 @@ def _mp_sample(
         This should be a backend instance, a list of variables to track, or a MultiTrace object
         with past values. If a MultiTrace object is given, it must contain samples for the chain
         number ``chain``. If None or a list of variables, the NDArray backend is used.
-    model : Model (optional if in ``with`` context)
     callback : Callable
         A function which gets called for every sample from the trace of a chain. The function is
         called with the trace and the current draw and will contain all samples for a single trace.
@@ -284,23 +283,10 @@ def _mp_sample(
 
     # FIXME: strace is always np array like for littlemcmc
     traces = []
-    """
-    for idx in range(chain, chain + chains):
-        if trace is not None:
-            strace = _choose_backend(copy(trace), idx, model=model)
-        else:
-            strace = _choose_backend(None, idx, model=model)
-        # for user supply start value, fill-in missing value if the supplied
-        # dict does not contain all parameters
-        update_start_vals(start[idx - chain], model.test_point, model)
-        if step.generates_stats and strace.supports_sampler_stats:
-            strace.setup(draws + tune, idx + chain, step.stats_dtypes)
-        else:
-            strace.setup(draws + tune, idx + chain)
-        traces.append(strace)
-    """
 
     sampler = ps.ParallelSampler(
+        logp_dlogp_func,
+        model_ndim,
         draws,
         tune,
         chains,
@@ -313,6 +299,11 @@ def _mp_sample(
         mp_ctx=mp_ctx,
         pickle_backend=pickle_backend,
     )
+
+    with sampler:
+        for draw in sampler:
+            import pdb; pdb.set_trace()
+
     try:
         try:
             with sampler:

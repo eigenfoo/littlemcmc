@@ -66,7 +66,6 @@ def rebuild_exc(exc, tb):
 # Messages
 # ('writing_done', is_last, sample_idx, tuning, stats, warns)
 # ('error', warnings, *exception_info)
-
 # ('abort', reason)
 # ('write_next',)
 # ('start',)
@@ -80,6 +79,8 @@ class _Process:
 
     def __init__(
         self,
+        logp_dlogp_func,
+        model_ndim,
         name: str,
         msg_pipe,
         step_method,
@@ -89,6 +90,7 @@ class _Process:
         tune: int,
         seed,
         pickle_backend,
+        start,
     ):
         self._msg_pipe = msg_pipe
         self._step_method = step_method
@@ -96,9 +98,12 @@ class _Process:
         self._shared_point = shared_point
         self._seed = seed
         self._tt_seed = seed + 1
+        self._logp_dlogp_func = logp_dlogp_func
+        self._model_ndim = model_ndim
         self._draws = draws
         self._tune = tune
         self._pickle_backend = pickle_backend
+        self.start = start
 
     def _unpickle_step_method(self):
         unpickle_error = (
@@ -129,7 +134,8 @@ class _Process:
             # We do not create this in __init__, as pickling this
             # would destroy the shared memory.
             self._unpickle_step_method()
-            self._point = self._make_numpy_refs()
+            self._trace = np.zeros([self._model_ndim, self._tune + self._draws])
+            self._point = self.start
             self._start_loop()
         except KeyboardInterrupt:
             pass
@@ -148,23 +154,14 @@ class _Process:
             if msg[0] == "abort":
                 break
 
-    def _make_numpy_refs(self):
-        shape_dtypes = self._step_method.vars_shape_dtype
-        point = {}
-        for name, (shape, dtype) in shape_dtypes.items():
-            array = self._shared_point[name]
-            self._shared_point[name] = array
-            point[name] = np.frombuffer(array, dtype).reshape(shape)
-        return point
-
-    def _write_point(self, point):
-        for name, vals in point.items():
-            self._point[name][...] = vals
+    def _write_point(self, draw, point):
+        self._trace[:, draw] = point
 
     def _recv_msg(self):
         return self._msg_pipe.recv()
 
     def _start_loop(self):
+        # Main sampling loop
         np.random.seed(self._seed)
         draw = 0
         tuning = True
@@ -183,6 +180,7 @@ class _Process:
             if draw < self._draws + self._tune:
                 try:
                     point, stats = self._compute_point()
+                    self.point = point
                 except SamplingError as e:
                     warns = self._collect_warnings()
                     e = ExceptionWithTraceback(e, e.__traceback__)
@@ -194,7 +192,7 @@ class _Process:
             if msg[0] == "abort":
                 raise KeyboardInterrupt()
             elif msg[0] == "write_next":
-                self._write_point(point)
+                self._write_point(draw, point)
                 is_last = draw + 1 == self._draws + self._tune
                 if is_last:
                     warns = self._collect_warnings()
@@ -206,11 +204,8 @@ class _Process:
                 raise ValueError("Unknown message " + msg[0])
 
     def _compute_point(self):
-        if self._step_method.generates_stats:
-            point, stats = self._step_method.step(self._point)
-        else:
-            point = self._step_method.step(self._point)
-            stats = None
+        # Main step
+        point, stats = self._step_method._astep(self._point)
         return point, stats
 
     def _collect_warnings(self):
@@ -229,6 +224,8 @@ class ProcessAdapter:
 
     def __init__(
         self,
+        logp_dlogp_func,
+        model_ndim,
         draws: int,
         tune: int,
         step_method,
@@ -245,19 +242,6 @@ class ProcessAdapter:
 
         self._shared_point = {}
         self._point = {}
-        for name, (shape, dtype) in step_method.vars_shape_dtype.items():
-            size = 1
-            for dim in shape:
-                size *= int(dim)
-            size *= dtype.itemsize
-            if size != ctypes.c_size_t(size).value:
-                raise ValueError("Variable %s is too large" % name)
-
-            array = mp_ctx.RawArray("c", size)
-            self._shared_point[name] = array
-            array_np = np.frombuffer(array, dtype).reshape(shape)
-            array_np[...] = start[name]
-            self._point[name] = array_np
 
         self._readable = True
         self._num_samples = 0
@@ -272,6 +256,8 @@ class ProcessAdapter:
             name=process_name,
             target=_run_process,
             args=(
+                logp_dlogp_func,
+                model_ndim,
                 process_name,
                 remote_conn,
                 step_method_send,
@@ -281,6 +267,7 @@ class ProcessAdapter:
                 tune,
                 seed,
                 pickle_backend,
+                start,
             ),
         )
         self._process.start()
@@ -389,6 +376,8 @@ Draw = namedtuple("Draw", ["chain", "is_last", "draw_idx", "tuning", "stats", "p
 class ParallelSampler:
     def __init__(
         self,
+        logp_dlogp_func,
+        model_ndim,
         draws: int,
         tune: int,
         chains: int,
@@ -424,6 +413,8 @@ class ParallelSampler:
 
         self._samplers = [
             ProcessAdapter(
+                logp_dlogp_func,
+                model_ndim,
                 draws,
                 tune,
                 step_method,
