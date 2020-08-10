@@ -182,11 +182,10 @@ def sample(
     }
 
     parallel = cores > 1 and chains > 1
-    parallel = False  # FIXME: remove this
     if parallel:
         _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
         try:
-            trace = _mp_sample(**sample_args, **parallel_args)
+            traces, stats = _mp_sample(**sample_args, **parallel_args)
         except pickle.PickleError:
             _log.warning("Could not pickle model, sampling singlethreaded.")
             _log.debug("Pickling error:", exec_info=True)
@@ -222,6 +221,8 @@ def sample(
 
 
 def _mp_sample(
+    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
+    model_ndim: int,
     draws: int,
     tune: int,
     step,
@@ -232,7 +233,6 @@ def _mp_sample(
     start: list,
     progressbar=True,
     trace=None,
-    model=None,
     callback=None,
     discard_tuned_samples=True,
     mp_ctx=None,
@@ -268,7 +268,6 @@ def _mp_sample(
         This should be a backend instance, a list of variables to track, or a MultiTrace object
         with past values. If a MultiTrace object is given, it must contain samples for the chain
         number ``chain``. If None or a list of variables, the NDArray backend is used.
-    model : Model (optional if in ``with`` context)
     callback : Callable
         A function which gets called for every sample from the trace of a chain. The function is
         called with the trace and the current draw and will contain all samples for a single trace.
@@ -281,30 +280,13 @@ def _mp_sample(
     trace : pymc3.backends.base.MultiTrace
         A ``MultiTrace`` object that contains the samples for all chains.
     """
-    # We did draws += tune in pm.sample
-    # FIXME: does this apply to littlemcmc? Need to figure out how `sample` calls
-    # `_mp_sample`.
-    draws -= tune
 
-    # FIXME: strace is always np array like for littlemcmc
-    traces = []
-    """
-    for idx in range(chain, chain + chains):
-        if trace is not None:
-            strace = _choose_backend(copy(trace), idx, model=model)
-        else:
-            strace = _choose_backend(None, idx, model=model)
-        # for user supply start value, fill-in missing value if the supplied
-        # dict does not contain all parameters
-        update_start_vals(start[idx - chain], model.test_point, model)
-        if step.generates_stats and strace.supports_sampler_stats:
-            strace.setup(draws + tune, idx + chain, step.stats_dtypes)
-        else:
-            strace.setup(draws + tune, idx + chain)
-        traces.append(strace)
-    """
+    trace = np.zeros([chains, model_ndim, tune + draws])
+    stats: List[List[SamplerWarning]] = [[] for _ in range(chains)]
 
     sampler = ps.ParallelSampler(
+        logp_dlogp_func,
+        model_ndim,
         draws,
         tune,
         chains,
@@ -317,43 +299,35 @@ def _mp_sample(
         mp_ctx=mp_ctx,
         pickle_backend=pickle_backend,
     )
+
     try:
         try:
             with sampler:
                 for draw in sampler:
-                    trace = traces[draw.chain - chain]
-                    if trace.supports_sampler_stats and draw.stats is not None:
-                        trace.record(draw.point, draw.stats)
-                    else:
-                        trace.record(draw.point)
-                    if draw.is_last:
-                        trace.close()
-                        if draw.warnings is not None:
-                            trace._add_warnings(draw.warnings)
-
+                    trace[draw.chain, :, draw.draw_idx] = draw.point
+                    stats[draw.chain].append(draw.stats[0])
                     if callback is not None:
                         callback(trace=trace, draw=draw)
 
         except ps.ParallelSamplingError as error:
-            trace = traces[error._chain - chain]
-            trace._add_warnings(error._warnings)
-            for trace in traces:
-                trace.close()
+            # trace = traces[error._chain - chain]
+            # trace._add_warnings(error._warnings)
+            # for trace in traces:
+            #     trace.close()
 
-            # FIXME: use np ndarray instead of multitrace
-            multitrace = MultiTrace(traces)
-            multitrace._report._log_summary()
+            # multitrace = MultiTrace(traces)
+            # multitrace._report._log_summary()
             raise
-        return MultiTrace(traces)
+        if discard_tuned_samples and trace is not None and stats is not None:
+            # pylint: disable=W0631
+            trace = trace[:, :, tune:]
+            stats = [chain_stats[tune:] for chain_stats in stats]
+        return trace, stats
     except KeyboardInterrupt:
-        if discard_tuned_samples:
-            traces, length = _choose_chains(traces, tune)
-        else:
-            traces, length = _choose_chains(traces, 0)
-        return MultiTrace(traces)[:length]
-    finally:
-        for trace in traces:
-            trace.close()
+        if discard_tuned_samples and trace is not None and stats is not None:
+            # pylint: disable=W0631
+            trace = trace[:, :, tune:]
+            stats = [chain_stats[tune:] for chain_stats in stats]
 
 
 def _sample_many(
