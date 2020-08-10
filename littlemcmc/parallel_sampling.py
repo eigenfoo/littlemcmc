@@ -155,7 +155,10 @@ class _Process:
                 break
 
     def _write_point(self, draw, point):
-        self._trace[:, draw] = point
+        # FIXME: point is an ndarray...???
+        # for name, vals in point.items():
+        #     self._point[name][...] = vals
+        self._point = point
 
     def _recv_msg(self):
         return self._msg_pipe.recv()
@@ -180,7 +183,6 @@ class _Process:
             if draw < self._draws + self._tune:
                 try:
                     point, stats = self._compute_point()
-                    self.point = point
                 except SamplingError as e:
                     warns = self._collect_warnings()
                     e = ExceptionWithTraceback(e, e.__traceback__)
@@ -240,8 +242,16 @@ class ProcessAdapter:
         process_name = "worker_chain_%s" % chain
         self._msg_pipe, remote_conn = multiprocessing.Pipe()
 
-        self._shared_point = {}
-        self._point = {}
+        dtype = np.dtype("float64")
+        shape = (model_ndim,)
+        size = model_ndim * dtype.itemsize
+        if size != ctypes.c_size_t(size).value:
+            raise ValueError("Variable is too large")
+        array = mp_ctx.RawArray("c", size)
+        self._shared_point = array
+        array_np = np.frombuffer(array, dtype).reshape(shape)
+        array_np[...] = start
+        self._point = array_np
 
         self._readable = True
         self._num_samples = 0
@@ -481,7 +491,8 @@ class ParallelSampler:
             # and only call proc.write_next() after the yield returns.
             # This seems to be faster overally though, as the worker
             # loses less time waiting.
-            point = {name: val.copy() for name, val in proc.shared_point_view.items()}
+            # point = {name: val.copy() for name, val in proc.shared_point_view.items()}
+            point = proc.shared_point_view
 
             # Already called for new proc in _make_active
             if not is_last:

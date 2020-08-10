@@ -185,7 +185,7 @@ def sample(
     if parallel:
         _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
         try:
-            trace = _mp_sample(**sample_args, **parallel_args)
+            traces, stats = _mp_sample(**sample_args, **parallel_args)
         except pickle.PickleError:
             _log.warning("Could not pickle model, sampling singlethreaded.")
             _log.debug("Pickling error:", exec_info=True)
@@ -203,7 +203,11 @@ def sample(
         traces, stats = _sample_many(**sample_args)
 
     # Reshape `trace` to have shape [num_chains, num_samples, num_variables]
-    trace = np.array([np.atleast_2d(chain_trace).T for chain_trace in traces])
+    # FIXME: these two cases are just a transpose away... can we fix that?
+    if parallel:
+        trace = np.array([np.atleast_2d(chain_trace) for chain_trace in traces])
+    else:
+        trace = np.array([np.atleast_2d(chain_trace).T for chain_trace in traces])
 
     # Reshape `stats` to a dictionary with keys = string of sampling stat name,
     # values = np.array with shape [num_chains, num_samples, num_variables]
@@ -281,8 +285,8 @@ def _mp_sample(
         A ``MultiTrace`` object that contains the samples for all chains.
     """
 
-    # FIXME: strace is always np array like for littlemcmc
-    traces = []
+    trace = np.zeros([chains, model_ndim, tune + draws])
+    stats: List[List[SamplerWarning]] = [[] for _ in range(chains)]
 
     sampler = ps.ParallelSampler(
         logp_dlogp_func,
@@ -300,50 +304,37 @@ def _mp_sample(
         pickle_backend=pickle_backend,
     )
 
-    with sampler:
-        for draw in sampler:
-            import pdb; pdb.set_trace()
-
     try:
         try:
             with sampler:
-                # TODO: need to modify ps.ParallelSampler to accept logp_dlogp_func and
-                # model_ndim. Then need to rework this function in the same style as
-                # _sample_many
+                # TODO: need to rework this function in the same style as _sample_many
                 for draw in sampler:
-                    trace = traces[draw.chain - chain]
-                    if trace.supports_sampler_stats and draw.stats is not None:
-                        trace.record(draw.point, draw.stats)
-                    else:
-                        trace.record(draw.point)
-                    if draw.is_last:
-                        trace.close()
-                        if draw.warnings is not None:
-                            trace._add_warnings(draw.warnings)
-
+                    trace[draw.chain, :, draw.draw_idx] = draw.point
+                    stats[draw.chain].append(draw.stats[0])
                     if callback is not None:
                         callback(trace=trace, draw=draw)
 
         except ps.ParallelSamplingError as error:
-            trace = traces[error._chain - chain]
-            trace._add_warnings(error._warnings)
-            for trace in traces:
-                trace.close()
+            # trace = traces[error._chain - chain]
+            # trace._add_warnings(error._warnings)
+            # for trace in traces:
+            #     trace.close()
 
-            # FIXME: use np ndarray instead of multitrace
-            multitrace = MultiTrace(traces)
-            multitrace._report._log_summary()
+            # multitrace = MultiTrace(traces)
+            # multitrace._report._log_summary()
             raise
-        return MultiTrace(traces)
+        return trace, stats
     except KeyboardInterrupt:
-        if discard_tuned_samples:
-            traces, length = _choose_chains(traces, tune)
-        else:
-            traces, length = _choose_chains(traces, 0)
-        return MultiTrace(traces)[:length]
+        # if discard_tuned_samples:
+        #     traces, length = _choose_chains(traces, tune)
+        # else:
+        #     traces, length = _choose_chains(traces, 0)
+        # return MultiTrace(traces)[:length]
+        return trace, stats
     finally:
-        for trace in traces:
-            trace.close()
+        # for trace in traces:
+        #     trace.close()
+        pass
 
 
 def _sample_many(
