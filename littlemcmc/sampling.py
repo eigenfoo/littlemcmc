@@ -203,11 +203,7 @@ def sample(
         traces, stats = _sample_many(**sample_args)
 
     # Reshape `trace` to have shape [num_chains, num_samples, num_variables]
-    # FIXME: these two cases are just a transpose away... can we fix that?
-    if parallel:
-        trace = np.array([np.atleast_2d(chain_trace) for chain_trace in traces])
-    else:
-        trace = np.array([np.atleast_2d(chain_trace).T for chain_trace in traces])
+    trace = np.array([np.atleast_2d(chain_trace).T for chain_trace in traces])
 
     # Reshape `stats` to a dictionary with keys = string of sampling stat name,
     # values = np.array with shape [num_chains, num_samples, num_variables]
@@ -323,6 +319,10 @@ def _mp_sample(
             # multitrace = MultiTrace(traces)
             # multitrace._report._log_summary()
             raise
+        if discard_tuned_samples and trace is not None and stats is not None:
+            # pylint: disable=W0631
+            trace = trace[:, :, tune:]
+            stats = [chain_stats[tune:] for chain_stats in stats]
         return trace, stats
     except KeyboardInterrupt:
         # if discard_tuned_samples:
@@ -330,7 +330,10 @@ def _mp_sample(
         # else:
         #     traces, length = _choose_chains(traces, 0)
         # return MultiTrace(traces)[:length]
-        return trace, stats
+        if discard_tuned_samples and trace is not None and stats is not None:
+            # pylint: disable=W0631
+            trace = trace[:, :, tune:]
+            stats = [chain_stats[tune:] for chain_stats in stats]
     finally:
         # for trace in traces:
         #     trace.close()
