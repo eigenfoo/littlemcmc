@@ -299,7 +299,6 @@ def _mp_sample(
         mp_ctx=mp_ctx,
         pickle_backend=pickle_backend,
     )
-
     try:
         try:
             with sampler:

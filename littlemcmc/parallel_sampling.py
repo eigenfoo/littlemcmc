@@ -154,17 +154,13 @@ class _Process:
             if msg[0] == "abort":
                 break
 
-    def _write_point(self, draw, point):
-        # FIXME: point is an ndarray...???
-        # for name, vals in point.items():
-        #     self._point[name][...] = vals
+    def _write_point(self, point):
         self._point = point
 
     def _recv_msg(self):
         return self._msg_pipe.recv()
 
     def _start_loop(self):
-        # Main sampling loop
         np.random.seed(self._seed)
         draw = 0
         tuning = True
@@ -194,7 +190,7 @@ class _Process:
             if msg[0] == "abort":
                 raise KeyboardInterrupt()
             elif msg[0] == "write_next":
-                self._write_point(draw, point)
+                self._write_point(point)
                 is_last = draw + 1 == self._draws + self._tune
                 if is_last:
                     warns = self._collect_warnings()
@@ -206,7 +202,6 @@ class _Process:
                 raise ValueError("Unknown message " + msg[0])
 
     def _compute_point(self):
-        # Main step
         point, stats = self._step_method._astep(self._point)
         return point, stats
 
@@ -491,7 +486,6 @@ class ParallelSampler:
             # and only call proc.write_next() after the yield returns.
             # This seems to be faster overally though, as the worker
             # loses less time waiting.
-            # point = {name: val.copy() for name, val in proc.shared_point_view.items()}
             point = proc.shared_point_view
 
             # Already called for new proc in _make_active
