@@ -19,7 +19,6 @@ import logging
 import pickle
 from collections import namedtuple
 import traceback
-import platform
 from .exceptions import SamplingError
 
 import numpy as np
