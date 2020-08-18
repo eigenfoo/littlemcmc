@@ -19,7 +19,6 @@ import logging
 import pickle
 from collections import namedtuple
 import traceback
-import platform
 from .exceptions import SamplingError
 
 import numpy as np
@@ -79,7 +78,6 @@ class _Process:
 
     def __init__(
         self,
-        logp_dlogp_func,
         model_ndim,
         name: str,
         msg_pipe,
@@ -98,7 +96,6 @@ class _Process:
         self._shared_point = shared_point
         self._seed = seed
         self._tt_seed = seed + 1
-        self._logp_dlogp_func = logp_dlogp_func
         self._model_ndim = model_ndim
         self._draws = draws
         self._tune = tune
@@ -221,7 +218,6 @@ class ProcessAdapter:
 
     def __init__(
         self,
-        logp_dlogp_func,
         model_ndim,
         draws: int,
         tune: int,
@@ -261,7 +257,6 @@ class ProcessAdapter:
             name=process_name,
             target=_run_process,
             args=(
-                logp_dlogp_func,
                 model_ndim,
                 process_name,
                 remote_conn,
@@ -381,7 +376,6 @@ Draw = namedtuple("Draw", ["chain", "is_last", "draw_idx", "tuning", "stats", "p
 class ParallelSampler:
     def __init__(
         self,
-        logp_dlogp_func,
         model_ndim,
         draws: int,
         tune: int,
@@ -401,8 +395,8 @@ class ParallelSampler:
 
         if mp_ctx is None or isinstance(mp_ctx, str):
             # Closes issue https://github.com/pymc-devs/pymc3/issues/3849
-            if platform.system() == "Darwin":
-                mp_ctx = "forkserver"
+            # if platform.system() == "Darwin":
+            #     mp_ctx = "forkserver"
             mp_ctx = multiprocessing.get_context(mp_ctx)
 
         step_method_pickled = None
@@ -418,7 +412,6 @@ class ParallelSampler:
 
         self._samplers = [
             ProcessAdapter(
-                logp_dlogp_func,
                 model_ndim,
                 draws,
                 tune,

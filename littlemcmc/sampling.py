@@ -221,7 +221,6 @@ def sample(
 
 
 def _mp_sample(
-    logp_dlogp_func: Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]],
     model_ndim: int,
     draws: int,
     tune: int,
@@ -285,7 +284,6 @@ def _mp_sample(
     stats: List[List[SamplerWarning]] = [[] for _ in range(chains)]
 
     sampler = ps.ParallelSampler(
-        logp_dlogp_func,
         model_ndim,
         draws,
         tune,
