@@ -130,9 +130,7 @@ def test_samples_not_all_same():
     tune = 10
     chains = 1
     cores = 1
-    trace, stats = lmc.sample(
-        logp_dlogp_func, model_ndim, draws, tune, chains=chains, cores=cores
-    )
+    trace, stats = lmc.sample(logp_dlogp_func, model_ndim, draws, tune, chains=chains, cores=cores)
     assert np.var(trace) > 0
 
 
