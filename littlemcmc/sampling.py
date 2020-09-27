@@ -279,7 +279,6 @@ def _mp_sample(
     trace : pymc3.backends.base.MultiTrace
         A ``MultiTrace`` object that contains the samples for all chains.
     """
-
     trace = np.zeros([chains, model_ndim, tune + draws])
     stats: List[List[SamplerWarning]] = [[] for _ in range(chains)]
 
