@@ -14,6 +14,10 @@ in multiple frameworks, and samples them with ``littlemcmc``. At the end
 of this notebook, we load the inference traces and sampler statistics
 into ArviZ and do some basic visualizations.
 
+.. code:: python
+
+    import littlemcmc as lmc
+
 Create and Visualize Data
 -------------------------
 
@@ -41,7 +45,7 @@ Create and Visualize Data
 
 
 
-.. image:: framework_cookbook_files/framework_cookbook_1_0.png
+.. image:: framework_cookbook_files/framework_cookbook_3_0.png
 
 
 PyTorch
@@ -83,8 +87,19 @@ PyTorch
 
 .. parsed-literal::
 
-    252 µs ± 13 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+    269 µs ± 24.1 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
+
+Please see
+```sample_pytorch_logp_dlogp_func.py`` <https://github.com/eigenfoo/littlemcmc/tree/main/docs/_static/scripts/sample_pytorch_logp_dlogp_func.py>`__
+for a working example. Theoretically, however, all that’s needed is to
+run the following snippet:
+
+.. code:: python
+
+   trace, stats = lmc.sample(
+       logp_dlogp_func=torch_logp_dlogp_func, model_ndim=3, tune=500, draws=1000, chains=4,
+   )
 
 JAX
 ---
@@ -115,41 +130,25 @@ JAX
 
 .. parsed-literal::
 
-    /Users/george/littlemcmc/docs/_static/notebooks/venv/lib/python3.7/site-packages/jax/lib/xla_bridge.py:125: UserWarning: No GPU/TPU found, falling back to CPU.
+    /Users/george/littlemcmc/venv/lib/python3.7/site-packages/jax/lib/xla_bridge.py:125: UserWarning: No GPU/TPU found, falling back to CPU.
       warnings.warn('No GPU/TPU found, falling back to CPU.')
 
 
 .. parsed-literal::
 
-    The slowest run took 14.88 times longer than the fastest. This could mean that an intermediate result is being cached.
-    1.14 ms ± 1.06 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    261 µs ± 88.6 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
-TensorFlow
-----------
+Please see
+```sample_jax_logp_dlogp_func.py`` <https://github.com/eigenfoo/littlemcmc/tree/main/docs/_static/scripts/sample_jax_logp_dlogp_func.py>`__
+for a working example. Theoretically, however, all that’s needed is to
+run the following snippet:
 
 .. code:: python
 
-    import tensorflow as tf
-    
-    @tf.function
-    def tf_model(params):
-        mean = params[0] * x + params[1]
-        loglike = -0.5 * tf.reduce_sum((y_obs - mean) ** 2 * tf.exp(-2 * params[2]) + 2 * params[2])
-        return loglike, tf.gradients(loglike, tf_params)[0]
-    
-    tf_params = tf.Variable(np.zeros(3), dtype="float64")
-    
-    def tf_logp_dlogp_func(x):
-        v, g = tf_model(tf_params)
-        return v.numpy(), g.numpy()
-
-
-
-.. parsed-literal::
-
-    329 µs ± 36.2 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
-
+   trace, stats = lmc.sample(
+       logp_dlogp_func=jax_logp_dlogp_func, model_ndim=3, tune=500, draws=1000, chains=4,
+   )
 
 PyMC3
 -----
@@ -173,48 +172,41 @@ PyMC3
 
 .. parsed-literal::
 
-    45.3 µs ± 922 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    42.2 µs ± 1.18 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
-
-Sampling
---------
-
-Now we use ``littlemcmc`` to run HMC for all the ``logp_dlogp_func``\ s
-from all the frameworks. Obviously, this code will take a while to run!
 
 .. code:: python
 
-    import littlemcmc as lmc
-    
-    logp_dlogp_funcs = {
-        "pytorch": torch_logp_dlogp_func,
-        "jax": jax_logp_dlogp_func,
-        "tensorflow": tf_logp_dlogp_func,
-        "pymc3": pm_logp_dlogp_func
-    }
-    
-    traces = {}
-    stats = {}
-    
-    for framework, logp_dlogp_func in logp_dlogp_funcs.items():
-        print(f"Sampling {framework}...")
-        traces[framework], stats[framework] = lmc.sample(
-            logp_dlogp_func=logp_dlogp_func,
-            model_ndim=3,
-            tune=500,
-            draws=1000,
-            chains=4,
-            cores=1,
-            progressbar=False,
-        )
+    trace, stats = lmc.sample(
+        logp_dlogp_func=pm_logp_dlogp_func,
+        model_ndim=3,
+        tune=500,
+        draws=1000,
+        chains=4,
+    )
 
 
-.. parsed-literal::
 
-    Sampling pytorch...
-    Sampling jax...
-    Sampling tensorflow...
-    Sampling pymc3...
+.. raw:: html
+
+    
+    <div>
+        <style>
+            /* Turns off some styling */
+            progress {
+                /* gets rid of default border in Firefox and Opera. */
+                border: none;
+                /* Needs to be in here for Safari polyfill so background images work as expected. */
+                background-size: auto;
+            }
+            .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
+                background: #F44336;
+            }
+        </style>
+      <progress value='6000' class='' max='6000' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      100.00% [6000/6000 00:03<00:00 Sampling 4 chains, 0 divergences]
+    </div>
+
 
 
 Visualize Traces with ArviZ
@@ -239,7 +231,7 @@ snippet!
 
     import arviz as az
     
-    dataset = arviz_from_littlemcmc(traces["pymc3"], stats["pymc3"])
+    dataset = arviz_from_littlemcmc(trace, stats)
     
     az.plot_trace(dataset)
     plt.show()
@@ -247,4 +239,5 @@ snippet!
 
 
 .. image:: framework_cookbook_files/framework_cookbook_18_0.png
+
 
