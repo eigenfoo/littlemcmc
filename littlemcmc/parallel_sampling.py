@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from typing import List
 import multiprocessing
 import ctypes
 import time
@@ -427,8 +428,8 @@ class ParallelSampler:
         ]
 
         self._inactive = self._samplers.copy()
-        self._finished = []
-        self._active = []
+        self._finished: List[ProcessAdapter] = []
+        self._active: List[ProcessAdapter] = []
         self._max_active = cores
 
         self._in_context = False

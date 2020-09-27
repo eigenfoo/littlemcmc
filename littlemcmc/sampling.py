@@ -123,8 +123,10 @@ def sample(
     """
     if cores is None:
         cores = min(4, os.cpu_count())
+        assert cores is not None  # To make mypy happy
     if chains is None:
         chains = max(2, cores)
+        assert chains is not None  # To make mypy happy
 
     if random_seed is None or isinstance(random_seed, int):
         if random_seed is not None:
@@ -185,7 +187,7 @@ def sample(
     if parallel:
         _log.info("Multiprocess sampling ({} chains in {} jobs)".format(chains, cores))
         try:
-            traces, stats = _mp_sample(**sample_args, **parallel_args)
+            traces, stats = _mp_sample(**sample_args, **parallel_args)  # type: ignore
         except pickle.PickleError:
             _log.warning("Could not pickle model, sampling singlethreaded.")
             _log.debug("Pickling error:", exec_info=True)
@@ -200,7 +202,7 @@ def sample(
 
     if not parallel:
         _log.info("Sequential sampling ({} chains in 1 job)".format(chains))
-        traces, stats = _sample_many(**sample_args)
+        traces, stats = _sample_many(**sample_args)  # type: ignore
 
     # Reshape `trace` to have shape [num_chains, num_samples, num_variables]
     trace = np.array([np.atleast_2d(chain_trace).T for chain_trace in traces])
@@ -279,7 +281,6 @@ def _mp_sample(
     trace : pymc3.backends.base.MultiTrace
         A ``MultiTrace`` object that contains the samples for all chains.
     """
-
     trace = np.zeros([chains, model_ndim, tune + draws])
     stats: List[List[SamplerWarning]] = [[] for _ in range(chains)]
 
@@ -363,7 +364,7 @@ def _sample_many(
     -------
     trace, stats
     """
-    traces = []
+    traces: List[np.ndarray] = []
     stats = []
 
     for i in range(chains):
@@ -513,10 +514,10 @@ def _iter_sample(
         stats.extend(step_stats)
         if callback is not None:
             warns = getattr(step, "warnings", None)
-            # FIXME: think about how callbacks will work in littlemcmc...
-            callback(
-                trace=trace, draw=(chain, i == draws, i, i < tune, stats, point, warns),
-            )
+            # FIXME: implement callbacks
+            # callback(
+            #     trace=trace, draw=(chain, i == draws, i, i < tune, stats, point, warns),
+            # )
         yield trace, stats
 
 

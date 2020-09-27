@@ -124,6 +124,16 @@ def test_nuts_recovers_1d_normal():
     assert np.allclose(np.std(trace), 1, atol=1)
 
 
+def test_samples_not_all_same():
+    model_ndim = 1
+    draws = 50
+    tune = 10
+    chains = 1
+    cores = 1
+    trace, stats = lmc.sample(logp_dlogp_func, model_ndim, draws, tune, chains=chains, cores=cores)
+    assert np.var(trace) > 0
+
+
 def test_reset_tuning():
     model_ndim = 1
     draws = 2
