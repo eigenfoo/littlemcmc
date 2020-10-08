@@ -20,7 +20,6 @@ from setuptools import setup, find_packages
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 REQUIREMENTS_FILE = PROJECT_ROOT / "requirements.txt"
-REQUIREMENTS_DEV_FILE = PROJECT_ROOT / "requirements-dev.txt"
 README_FILE = PROJECT_ROOT / "README.md"
 VERSION_FILE = PROJECT_ROOT / "littlemcmc" / "__init__.py"
 
@@ -76,7 +75,6 @@ if __name__ == "__main__":
         classifiers=CLASSIFIERS,
         packages=find_packages(),
         install_requires=get_requirements(REQUIREMENTS_FILE),
-        tests_require=get_requirements(REQUIREMENTS_DEV_FILE),
         long_description=get_long_description(),
         long_description_content_type="text/markdown",
         include_package_data=True,
