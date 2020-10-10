@@ -14,7 +14,7 @@
 
 """LittleMCMC."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.2"
 
 from .sampling import sample, init_nuts
 from .hmc import HamiltonianMC
