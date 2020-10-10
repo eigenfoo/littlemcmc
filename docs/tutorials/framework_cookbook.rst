@@ -87,7 +87,7 @@ PyTorch
 
 .. parsed-literal::
 
-    269 µs ± 24.1 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+    298 µs ± 43.8 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 
 Please see
@@ -130,13 +130,13 @@ JAX
 
 .. parsed-literal::
 
-    /Users/george/littlemcmc/venv/lib/python3.7/site-packages/jax/lib/xla_bridge.py:125: UserWarning: No GPU/TPU found, falling back to CPU.
+    /Users/george/miniconda3/lib/python3.7/site-packages/jax/lib/xla_bridge.py:125: UserWarning: No GPU/TPU found, falling back to CPU.
       warnings.warn('No GPU/TPU found, falling back to CPU.')
 
 
 .. parsed-literal::
 
-    261 µs ± 88.6 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
+    269 µs ± 48.6 µs per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 Please see
@@ -172,7 +172,7 @@ PyMC3
 
 .. parsed-literal::
 
-    42.2 µs ± 1.18 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    46.3 µs ± 3.94 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 .. code:: python
@@ -183,31 +183,8 @@ PyMC3
         tune=500,
         draws=1000,
         chains=4,
+        progressbar=False,  # Progress bars don't render well in reStructuredText docs...
     )
-
-
-
-.. raw:: html
-
-    
-    <div>
-        <style>
-            /* Turns off some styling */
-            progress {
-                /* gets rid of default border in Firefox and Opera. */
-                border: none;
-                /* Needs to be in here for Safari polyfill so background images work as expected. */
-                background-size: auto;
-            }
-            .progress-bar-interrupted, .progress-bar-interrupted::-webkit-progress-bar {
-                background: #F44336;
-            }
-        </style>
-      <progress value='6000' class='' max='6000' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      100.00% [6000/6000 00:03<00:00 Sampling 4 chains, 0 divergences]
-    </div>
-
-
 
 Visualize Traces with ArviZ
 ---------------------------
