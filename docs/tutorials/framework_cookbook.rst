@@ -91,7 +91,7 @@ PyTorch
 
 
 Please see
-```sample_pytorch_logp_dlogp_func.py`` <https://github.com/eigenfoo/littlemcmc/tree/main/docs/_static/scripts/sample_pytorch_logp_dlogp_func.py>`__
+```sample_pytorch_logp_dlogp_func.py`` <https://github.com/eigenfoo/littlemcmc/tree/master/docs/_static/scripts/sample_pytorch_logp_dlogp_func.py>`__
 for a working example. Theoretically, however, all that’s needed is to
 run the following snippet:
 
@@ -140,7 +140,7 @@ JAX
 
 
 Please see
-```sample_jax_logp_dlogp_func.py`` <https://github.com/eigenfoo/littlemcmc/tree/main/docs/_static/scripts/sample_jax_logp_dlogp_func.py>`__
+```sample_jax_logp_dlogp_func.py`` <https://github.com/eigenfoo/littlemcmc/tree/master/docs/_static/scripts/sample_jax_logp_dlogp_func.py>`__
 for a working example. Theoretically, however, all that’s needed is to
 run the following snippet:
 
