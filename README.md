@@ -3,9 +3,8 @@
 > *Warning:* `littlemcmc` is archived and no longer actively maintained. For any questions, issues
 > or concerns, please [reach out to me](https://eigenfoo.xyz/).
 
-> *Warning:* `littlemcmc` is still in pre-release and under development. Most notably,
-> behavior is unstable in Jupyter notebooks - for best results and support, please use
-> `littlemcmc` in Python scripts. Please consult [our GitHub
+> *Warning:* `littlemcmc`'s behavior is unstable in Jupyter notebooks - for best results and support,
+> please use `littlemcmc` in Python scripts. Please consult [our GitHub
 > issues](https://github.com/eigenfoo/littlemcmc/issues).
 
 ---
