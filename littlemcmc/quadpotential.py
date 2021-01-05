@@ -84,7 +84,10 @@ class PositiveDefiniteError(ValueError):
         self.msg = msg
 
     def __str__(self):
-        return "Scaling is not positive definite: %s. Check indexes %s." % (self.msg, self.idx,)
+        return "Scaling is not positive definite: %s. Check indexes %s." % (
+            self.msg,
+            self.idx,
+        )
 
 
 class QuadPotential(object):
@@ -292,7 +295,12 @@ class _WeightedVariance(object):
     """Online algorithm for computing mean of variance."""
 
     def __init__(
-        self, nelem, initial_mean=None, initial_variance=None, initial_weight=0, dtype="d",
+        self,
+        nelem,
+        initial_mean=None,
+        initial_variance=None,
+        initial_weight=0,
+        dtype="d",
     ):
         self._dtype = dtype
         self.w_sum = float(initial_weight)
@@ -562,7 +570,12 @@ class _WeightedCovariance:
     """
 
     def __init__(
-        self, nelem, initial_mean=None, initial_covariance=None, initial_weight=0, dtype="d",
+        self,
+        nelem,
+        initial_mean=None,
+        initial_covariance=None,
+        initial_weight=0,
+        dtype="d",
     ):
         self._dtype = dtype
         self.n_samples = float(initial_weight)

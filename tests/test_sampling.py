@@ -19,7 +19,13 @@ from test_utils import logp_dlogp_func
 
 
 @pytest.mark.parametrize(
-    "method", ["adapt_diag", "jitter+adapt_diag", "adapt_full", "jitter+adapt_full",],
+    "method",
+    [
+        "adapt_diag",
+        "jitter+adapt_diag",
+        "adapt_full",
+        "jitter+adapt_full",
+    ],
 )
 def test_init_nuts(method):
     start, step = lmc.init_nuts(logp_dlogp_func=logp_dlogp_func, model_ndim=1, init=method)

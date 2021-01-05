@@ -143,7 +143,10 @@ def test_weighted_covariance(ndim=10, seed=5432):
 
     # Make sure that the weighted estimate also works
     est2 = quadpotential._WeightedCovariance(
-        ndim, np.mean(samples[:10], axis=0), np.cov(samples[:10], rowvar=0, bias=True), 10,
+        ndim,
+        np.mean(samples[:10], axis=0),
+        np.cov(samples[:10], rowvar=0, bias=True),
+        10,
     )
     for sample in samples[10:]:
         est2.add_sample(sample, 1)

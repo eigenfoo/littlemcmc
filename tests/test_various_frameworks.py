@@ -83,7 +83,8 @@ def pm_logp_dlogp_func(x):
 
 
 @pytest.mark.parametrize(
-    "framework", ["pytorch", "jax", "pymc3"],
+    "framework",
+    ["pytorch", "jax", "pymc3"],
 )
 def test_multiprocessing_with_various_frameworks(framework):
     logp_dlogp_funcs = {

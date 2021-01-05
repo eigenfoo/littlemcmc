@@ -46,5 +46,9 @@ def torch_logp_dlogp_func(x):
 
 
 trace, stats = lmc.sample(
-    logp_dlogp_func=torch_logp_dlogp_func, model_ndim=3, tune=500, draws=1000, chains=4,
+    logp_dlogp_func=torch_logp_dlogp_func,
+    model_ndim=3,
+    tune=500,
+    draws=1000,
+    chains=4,
 )
