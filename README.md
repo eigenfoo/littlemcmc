@@ -1,10 +1,11 @@
 <p align="center"><img src="docs/_static/logo/default-cropped.png"></p>
 
-> *Warning:* `littlemcmc` is archived and no longer actively maintained. For any questions, issues
-> or concerns, please [reach out to me](https://eigenfoo.xyz/).
-
-> *Warning:* `littlemcmc`'s behavior is unstable in Jupyter notebooks - for best results and support,
-> please use `littlemcmc` in Python scripts. Please consult [our GitHub
+> *Warning:* `littlemcmc`'s behavior is unstable in Jupyter notebooks - for best
+> results and support, please use `littlemcmc` in Python scripts. Further,
+> despite best efforts, `littlemcmc` is not guaranteed to be up-to-date with the
+> [current PyMC3 HMC/NUTS
+> samplers](https://github.com/pymc-devs/pymc3/tree/master/pymc3/step_methods/hmc).
+> Please consult [our GitHub
 > issues](https://github.com/eigenfoo/littlemcmc/issues).
 
 ---
