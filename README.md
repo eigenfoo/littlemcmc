@@ -55,7 +55,4 @@ Apache-2.0 license](https://github.com/eigenfoo/littlemcmc/blob/master/LICENSE).
 
 ## Citation
 
-Please cite as:
-
-> George Ho. (2021, April 22). eigenfoo/littlemcmc: v1.0.0 (Version v1.0.0).
-> Zenodo. http://doi.org/10.5281/zenodo.4710368
+Please cite using the [Zenodo DOI](https://doi.org/10.5281/zenodo.4710367).
